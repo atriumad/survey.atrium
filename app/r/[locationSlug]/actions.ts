@@ -53,5 +53,11 @@ export async function submitReview(formData: FormData) {
     throw new Error("Could not save review");
   }
 
+  if (classification === "good") {
+    redirect(
+      `/r/${locationSlug}/gracias?c=${classification}&comment=${encodeURIComponent(comment)}`
+    );
+  }
+
   redirect(`/r/${locationSlug}/gracias?c=${classification}`);
 }
