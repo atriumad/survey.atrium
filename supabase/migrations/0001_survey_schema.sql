@@ -76,6 +76,9 @@ alter table profiles enable row level security;
 create policy "anon can read clients" on clients for select to anon using (true);
 create policy "anon can read locations" on locations for select to anon using (true);
 
+-- Public (anon) needs to read negative keywords to classify a submitted review.
+create policy "anon can read keywords" on negative_keywords for select to anon using (true);
+
 -- Public (anon) can only insert reviews, never read/update/delete them.
 create policy "anon can insert reviews" on reviews for insert to anon with check (true);
 
