@@ -1,9 +1,11 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { reviewSubmitSchema } from "@/lib/validation";
 import { classifyReview } from "@/lib/classify";
+import { isRateLimited } from "@/lib/rate-limit";
 
 export async function submitReview(formData: FormData) {
   const parsed = reviewSubmitSchema.safeParse({
@@ -14,6 +16,12 @@ export async function submitReview(formData: FormData) {
 
   if (!parsed.success) {
     throw new Error(parsed.error.issues[0]?.message ?? "Invalid submission");
+  }
+
+  const headersList = await headers();
+  const ip = headersList.get("x-forwarded-for") ?? "unknown";
+  if (isRateLimited(ip)) {
+    throw new Error("Espera un momento antes de enviar otra review");
   }
 
   const { locationSlug, rating, comment } = parsed.data;
