@@ -1,9 +1,18 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/get-profile";
 import { logout } from "./actions";
 import { Button } from "@/components/ui/button";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect("/dashboard/login");
+
   const profile = await getProfile();
 
   if (!profile) {
