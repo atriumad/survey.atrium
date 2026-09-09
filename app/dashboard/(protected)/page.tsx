@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/get-profile";
-import { summarizeReviews } from "@/lib/metrics";
+import { summarizeReviews, calculateConversionRate } from "@/lib/metrics";
 import { LocationFilter } from "./location-filter";
 import type { Review } from "@/lib/types";
 
@@ -27,6 +27,14 @@ export default async function DashboardHomePage({
   const { data: reviews } = await query;
   const summary = summarizeReviews((reviews ?? []) as Review[]);
 
+  let scansQuery = supabase
+    .from("qr_scans")
+    .select("*", { count: "exact", head: true })
+    .eq("client_id", profile.clientId);
+  if (effectiveLocation) scansQuery = scansQuery.eq("location_id", effectiveLocation);
+  const { count: scansTotal } = await scansQuery;
+  const conversionRate = calculateConversionRate(summary.total, scansTotal ?? 0);
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex justify-between items-center">
@@ -39,6 +47,8 @@ export default async function DashboardHomePage({
         <MetricCard label="Rating promedio" value={summary.averageRating.toFixed(1)} />
         <MetricCard label="% Buenas" value={`${summary.goodPercent}%`} />
         <MetricCard label="% Compartidas a Google" value={`${summary.sharedPercent}%`} />
+        <MetricCard label="Escaneos QR" value={scansTotal ?? 0} />
+        <MetricCard label="Conversion" value={`${conversionRate}%`} />
       </div>
 
       <div>
