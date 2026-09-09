@@ -57,3 +57,15 @@ describe("summarizeReviews", () => {
     expect(result.starDistribution).toEqual({ 1: 0, 2: 1, 3: 0, 4: 0, 5: 2 });
   });
 });
+
+import { calculateConversionRate } from "@/lib/metrics";
+
+describe("calculateConversionRate", () => {
+  it("returns the percent of scans that became reviews", () => {
+    expect(calculateConversionRate(50, 200)).toBe(25);
+  });
+
+  it("returns 0 when there are no scans", () => {
+    expect(calculateConversionRate(10, 0)).toBe(0);
+  });
+});
