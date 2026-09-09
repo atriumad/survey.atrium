@@ -30,7 +30,7 @@ function LocationRow({ location }: { location: Location }) {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin;
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
     const url = buildReviewUrl(baseUrl, location.slug);
     generateQrDataUrl(url).then(setQrDataUrl);
   }, [location.slug]);

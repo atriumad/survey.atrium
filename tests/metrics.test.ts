@@ -65,7 +65,11 @@ describe("calculateConversionRate", () => {
     expect(calculateConversionRate(50, 200)).toBe(25);
   });
 
-  it("returns 0 when there are no scans", () => {
-    expect(calculateConversionRate(10, 0)).toBe(0);
+  it("returns null when there are no scans yet", () => {
+    expect(calculateConversionRate(10, 0)).toBeNull();
+  });
+
+  it("clamps to 100 when reviews outnumber scans", () => {
+    expect(calculateConversionRate(40, 1)).toBe(100);
   });
 });

@@ -38,7 +38,7 @@ export function summarizeReviews(reviews: Review[]): ReviewSummary {
   };
 }
 
-export function calculateConversionRate(reviewsTotal: number, scansTotal: number): number {
-  if (scansTotal === 0) return 0;
-  return Math.round((reviewsTotal / scansTotal) * 100);
+export function calculateConversionRate(reviewsTotal: number, scansTotal: number): number | null {
+  if (scansTotal === 0) return null;
+  return Math.min(100, Math.round((reviewsTotal / scansTotal) * 100));
 }

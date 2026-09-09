@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { ReviewForm } from "./review-form";
 
@@ -20,13 +21,12 @@ export default async function ReviewPage({
     notFound();
   }
 
-  try {
-    await supabase
+  after(async () => {
+    const { error } = await supabase
       .from("qr_scans")
       .insert({ client_id: location.client_id, location_id: location.id });
-  } catch {
-    // Scan tracking is best-effort — never block the review page over it.
-  }
+    if (error) console.error("qr_scan insert failed", error);
+  });
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-6 gap-6">

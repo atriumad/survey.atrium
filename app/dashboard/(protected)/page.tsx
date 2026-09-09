@@ -48,7 +48,7 @@ export default async function DashboardHomePage({
         <MetricCard label="% Buenas" value={`${summary.goodPercent}%`} />
         <MetricCard label="% Compartidas a Google" value={`${summary.sharedPercent}%`} />
         <MetricCard label="Escaneos QR" value={scansTotal ?? 0} />
-        <MetricCard label="Conversion" value={`${conversionRate}%`} />
+        <MetricCard label="Conversion" value={conversionRate === null ? "—" : `${conversionRate}%`} />
       </div>
 
       <div>
