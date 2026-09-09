@@ -12,12 +12,20 @@ export default async function ReviewPage({
 
   const { data: location } = await supabase
     .from("locations")
-    .select("id, name")
+    .select("id, name, client_id")
     .eq("slug", locationSlug)
     .single();
 
   if (!location) {
     notFound();
+  }
+
+  try {
+    await supabase
+      .from("qr_scans")
+      .insert({ client_id: location.client_id, location_id: location.id });
+  } catch {
+    // Scan tracking is best-effort — never block the review page over it.
   }
 
   return (
