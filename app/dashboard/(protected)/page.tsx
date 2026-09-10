@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/get-profile";
 import { summarizeReviews, calculateConversionRate } from "@/lib/metrics";
 import { LocationFilter } from "./location-filter";
+import { PageHeader } from "./page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import type { Review } from "@/lib/types";
 
@@ -38,10 +39,10 @@ export default async function DashboardHomePage({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-serif italic text-ink">Metricas</h1>
-        {profile.role === "admin" && <LocationFilter locations={locations ?? []} />}
-      </div>
+      <PageHeader
+        title="Metricas"
+        actions={profile.role === "admin" && <LocationFilter locations={locations ?? []} />}
+      />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <MetricCard label="Total reviews" value={summary.total} />
