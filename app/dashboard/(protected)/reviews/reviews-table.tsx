@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { reviewsToCsv } from "@/lib/csv";
 import type { Review } from "@/lib/types";
 
-export function ReviewsTable({ reviews }: { reviews: Review[] }) {
+export function ExportButton({ reviews }: { reviews: Review[] }) {
   function handleExport() {
     const csv = reviewsToCsv(reviews);
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -18,41 +18,42 @@ export function ReviewsTable({ reviews }: { reviews: Review[] }) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex justify-end">
-        <Button variant="outline" onClick={handleExport} disabled={reviews.length === 0}>
-          Exportar CSV
-        </Button>
-      </div>
-      <div className="rounded-[26px] bg-white overflow-hidden shadow-card">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-cool text-left text-xs uppercase tracking-wide text-body">
-              <th className="p-3 font-medium">Fecha</th>
-              <th className="p-3 font-medium">Rating</th>
-              <th className="p-3 font-medium">Clasificacion</th>
-              <th className="p-3 font-medium">Comentario</th>
+    <Button variant="outline" onClick={handleExport} disabled={reviews.length === 0}>
+      Exportar CSV
+    </Button>
+  );
+}
+
+export function ReviewsTable({ reviews }: { reviews: Review[] }) {
+  return (
+    <div className="rounded-[26px] bg-white overflow-hidden shadow-card">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-cool text-left text-xs uppercase tracking-wide text-body">
+            <th className="p-3 font-medium">Fecha</th>
+            <th className="p-3 font-medium">Rating</th>
+            <th className="p-3 font-medium">Clasificacion</th>
+            <th className="p-3 font-medium">Comentario</th>
+          </tr>
+        </thead>
+        <tbody>
+          {reviews.map((review) => (
+            <tr key={review.id} className="border-b border-cool last:border-0">
+              <td className="p-3 text-body">{review.created_at.slice(0, 10)}</td>
+              <td className="p-3 font-medium text-ink">{review.rating}★</td>
+              <td className="p-3">
+                <Badge variant={review.classification === "good" ? "mint" : "destructive"}>
+                  {review.classification}
+                </Badge>
+              </td>
+              <td className="p-3 text-body">{review.comment ?? "-"}</td>
             </tr>
-          </thead>
-          <tbody>
-            {reviews.map((review) => (
-              <tr key={review.id} className="border-b border-cool last:border-0">
-                <td className="p-3 text-body">{review.created_at.slice(0, 10)}</td>
-                <td className="p-3 font-medium text-ink">{review.rating}★</td>
-                <td className="p-3">
-                  <Badge variant={review.classification === "good" ? "mint" : "destructive"}>
-                    {review.classification}
-                  </Badge>
-                </td>
-                <td className="p-3 text-body">{review.comment ?? "-"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {reviews.length === 0 && (
-          <p className="text-muted-foreground text-center py-8">Sin reviews todavia.</p>
-        )}
-      </div>
+          ))}
+        </tbody>
+      </table>
+      {reviews.length === 0 && (
+        <p className="text-body text-center py-8">Sin reviews todavia.</p>
+      )}
     </div>
   );
 }

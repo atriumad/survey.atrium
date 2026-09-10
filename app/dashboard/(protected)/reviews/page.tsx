@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/get-profile";
-import { ReviewsTable } from "./reviews-table";
+import { ExportButton, ReviewsTable } from "./reviews-table";
 import { LocationFilter } from "../location-filter";
+import { PageHeader } from "../page-header";
 import type { Review } from "@/lib/types";
 
 export default async function ReviewsPage({
@@ -33,14 +34,20 @@ export default async function ReviewsPage({
   if (params.to) query = query.lte("created_at", params.to);
 
   const { data: reviews } = await query;
+  const reviewsList = (reviews ?? []) as Review[];
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-serif italic text-ink">Reviews</h1>
-        {profile.role === "admin" && <LocationFilter locations={locations ?? []} />}
-      </div>
-      <ReviewsTable reviews={(reviews ?? []) as Review[]} />
+      <PageHeader
+        title="Reviews"
+        actions={
+          <div className="flex items-center gap-2">
+            {profile.role === "admin" && <LocationFilter locations={locations ?? []} />}
+            <ExportButton reviews={reviewsList} />
+          </div>
+        }
+      />
+      <ReviewsTable reviews={reviewsList} />
     </div>
   );
 }
