@@ -22,7 +22,7 @@ export default async function ThankYouPage({
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-6 gap-6 bg-cream">
-      <h1 className="text-3xl font-serif italic text-ink text-center">Gracias por tu opinion!</h1>
+      <h1 className="text-2xl font-medium text-ink text-center">Gracias por tu opinion!</h1>
       {sharedToGoogle && location?.google_place_id ? (
         <ShareGoogle googlePlaceId={location.google_place_id} comment={comment ?? ""} />
       ) : (
