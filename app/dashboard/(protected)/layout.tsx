@@ -17,8 +17,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   if (!profile) {
     return (
-      <main className="min-h-screen flex flex-col items-center justify-center p-6 gap-4">
-        <p>No tenes acceso a este dashboard.</p>
+      <main className="min-h-screen flex flex-col items-center justify-center p-6 gap-4 bg-cream">
+        <p className="text-body">No tenes acceso a este dashboard.</p>
         <form action={logout}>
           <Button type="submit" variant="outline">Cerrar sesion</Button>
         </form>
@@ -27,12 +27,29 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="border-b p-4 flex justify-between items-center">
-        <nav className="flex gap-4">
-          <Link href="/dashboard">Metricas</Link>
-          <Link href="/dashboard/reviews">Reviews</Link>
-          {profile.role === "admin" && <Link href="/dashboard/config">Config</Link>}
+    <div className="min-h-screen flex flex-col bg-off-white">
+      <header className="border-b border-cool bg-white/80 backdrop-blur px-6 py-3 flex justify-between items-center sticky top-0">
+        <nav className="flex gap-1">
+          <Link
+            href="/dashboard"
+            className="rounded-full px-4 py-2 text-sm font-medium text-body hover:bg-muted hover:text-ink transition-colors"
+          >
+            Metricas
+          </Link>
+          <Link
+            href="/dashboard/reviews"
+            className="rounded-full px-4 py-2 text-sm font-medium text-body hover:bg-muted hover:text-ink transition-colors"
+          >
+            Reviews
+          </Link>
+          {profile.role === "admin" && (
+            <Link
+              href="/dashboard/config"
+              className="rounded-full px-4 py-2 text-sm font-medium text-body hover:bg-muted hover:text-ink transition-colors"
+            >
+              Config
+            </Link>
+          )}
         </nav>
         <form action={logout}>
           <Button type="submit" variant="ghost" size="sm">Cerrar sesion</Button>

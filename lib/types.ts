@@ -8,6 +8,7 @@ export interface Review {
   location_id: string;
   rating: number;
   comment: string | null;
+  email: string | null;
   classification: Classification;
   matched_keywords: string[] | null;
   shared_to_google: boolean;

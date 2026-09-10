@@ -9,6 +9,7 @@ function makeReview(overrides: Partial<Review>): Review {
     location_id: "l1",
     rating: 5,
     comment: null,
+    email: null,
     classification: "good",
     matched_keywords: null,
     shared_to_google: false,

@@ -10,8 +10,12 @@ import { isRateLimited } from "@/lib/rate-limit";
 export async function submitReview(formData: FormData) {
   const parsed = reviewSubmitSchema.safeParse({
     locationSlug: formData.get("locationSlug"),
+    email: String(formData.get("email") ?? "")
+      .trim()
+      .toLowerCase(),
     rating: Number(formData.get("rating")),
     comment: formData.get("comment") ?? "",
+    sharedToGoogle: formData.get("sharedToGoogle") === "true",
   });
 
   if (!parsed.success) {
@@ -24,7 +28,8 @@ export async function submitReview(formData: FormData) {
     throw new Error("Espera un momento antes de enviar otra review");
   }
 
-  const { locationSlug, rating, comment } = parsed.data;
+  const { locationSlug, email, rating, comment, sharedToGoogle: requestedShareToGoogle } =
+    parsed.data;
   const supabase = await createClient();
 
   const { data: location, error: locationError } = await supabase
@@ -34,6 +39,7 @@ export async function submitReview(formData: FormData) {
     .single();
 
   if (locationError || !location) {
+    if (locationError) console.error("Location lookup failed", locationError);
     throw new Error("Location not found");
   }
 
@@ -48,22 +54,29 @@ export async function submitReview(formData: FormData) {
     negativeKeywords: (keywordRows ?? []).map((row) => row.keyword),
   });
 
+  const sharedToGoogle = requestedShareToGoogle && classification === "good";
+
   const { error: insertError } = await supabase.from("reviews").insert({
     client_id: location.client_id,
     location_id: location.id,
     rating,
     comment: comment || null,
+    email,
     classification,
     matched_keywords: matchedKeywords.length > 0 ? matchedKeywords : null,
+    shared_to_google: sharedToGoogle,
   });
 
   if (insertError) {
+    console.error("Could not save review", insertError);
     throw new Error("Could not save review");
   }
 
   if (classification === "good") {
     redirect(
-      `/r/${locationSlug}/gracias?c=${classification}&comment=${encodeURIComponent(comment)}`
+      `/r/${locationSlug}/gracias?c=${classification}&s=${
+        sharedToGoogle ? "1" : "0"
+      }&comment=${encodeURIComponent(comment)}`
     );
   }
 

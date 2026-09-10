@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atrium — Brand Colours &amp; Type</title>
+<style>
+  :root{
+    --cream:#f3efe4; --off-white:#faf9f5; --card:#ffffff; --cool:#e4eef0;
+    --track:#e6e1d4; --track-soft:#ece7db; --pending:#c7cec9;
+    --ink:#042f34; --dark:#16232b; --lime:#b8e89a;
+    --green:#0e6e64; --green-fill:#1e8c7c; --green-ink:#0a4249; --green-soft:#dcefe9;
+    --amber:#ffc933; --amber-fill:#f0b21f; --amber-soft:#fdeec4; --amber-ink:#8a6410;
+    --red-fill:#e08a5b; --red-soft:#f7e2d6; --red-ink:#c0653a; --red-tint:#f0b79b; --error:#b4553a;
+    --charcoal:#16232b; --body:#545c5f; --muted:#61686a; --muted-soft:#8b9092;
+    --line:rgba(22,35,43,.14); --line-inverse:rgba(243,239,228,.2);
+    --coral:#e67a6f; --lilac:#d2b4ee; --sage:#a8c89a; --periwinkle:#7e9bf0;
+    --radius-card:26px; --radius-card-sm:18px;
+    --shadow-soft:0 1px 0 rgba(4,47,52,.04), 0 16px 40px rgba(4,47,52,.07);
+    --sans:"Inter Tight",system-ui,-apple-system,sans-serif;
+    --serif:"Instrument Serif",Georgia,serif;
+    --script:"Nothing You Could Do","Segoe Script",cursive;
+    --ease:cubic-bezier(.2,.7,.2,1);
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--cream);font-family:var(--sans);color:var(--body);
+       -webkit-font-smoothing:antialiased}
+  .page{max-width:1600px;margin:0 auto;padding:clamp(20px,4vw,72px) clamp(16px,4vw,72px) clamp(40px,6vw,80px)}
+
+  /* ── header ─────────────────────────────────────────────── */
+  .head{background:var(--ink);border-radius:var(--radius-card);padding:clamp(28px,5vw,56px);position:relative;overflow:hidden}
+  .head::after{content:"";position:absolute;inset:-20% -10% auto -10%;height:150%;pointer-events:none;
+    background:radial-gradient(58% 70% at 78% 8%,
+        color-mix(in srgb, var(--lime) 62%, white) 0%,
+        color-mix(in srgb, var(--lime) 34%, transparent) 24%,
+        color-mix(in srgb, var(--lime) 14%, transparent) 46%, transparent 70%)}
+  .head>*{position:relative;z-index:1}
+  .eyebrow{font-size:clamp(11px,1.1vw,13px);letter-spacing:.28em;text-transform:uppercase;color:var(--lime);font-weight:600}
+  h1{font-family:var(--sans);font-weight:400;font-size:clamp(2.4rem,6.4vw,5.25rem);line-height:.95;
+     letter-spacing:-.035em;margin:16px 0 0;color:var(--cream);text-wrap:balance}
+  h1 em{font-family:var(--serif);font-style:italic;letter-spacing:-.025em;color:var(--lime)}
+  .lede{margin:20px 0 0;max-width:74ch;color:var(--cream);font-size:clamp(14.5px,1.3vw,17.5px);line-height:1.6;opacity:.82;text-wrap:pretty}
+  .stamp{position:absolute;top:clamp(28px,5vw,56px);right:clamp(20px,5vw,56px);z-index:2;text-align:right;
+         color:var(--lime);font-size:12px;letter-spacing:.16em;text-transform:uppercase;line-height:1.9;opacity:.72}
+
+  /* ── copy toolbar ───────────────────────────────────────── */
+  .toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:26px 0 0;
+           background:var(--card);border:1px solid var(--line);border-radius:999px;padding:10px 10px 10px 20px;
+           box-shadow:var(--shadow-soft);position:sticky;top:12px;z-index:20}
+  .toolbar .lb{font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+  .seg{display:flex;gap:6px;background:var(--track-soft);border-radius:999px;padding:4px}
+  .seg button{appearance:none;border:0;background:transparent;font:inherit;font-size:13px;font-weight:600;
+              color:var(--muted);padding:8px 16px;border-radius:999px;cursor:pointer;transition:.2s var(--ease)}
+  .seg button[aria-pressed="true"]{background:var(--ink);color:var(--lime)}
+  .hint{font-size:12.5px;color:var(--muted);margin-left:auto;padding-right:8px}
+
+  /* ── swatch primitives ──────────────────────────────────── */
+  .copy{appearance:none;font:inherit;cursor:pointer;border-radius:999px;border:1px solid currentColor;
+        background:transparent;color:inherit;font-size:11px;font-weight:700;letter-spacing:.06em;
+        text-transform:uppercase;padding:5px 10px;opacity:.55;transition:.18s var(--ease)}
+  .copy:hover{opacity:1}
+  .copy.done{opacity:1;background:currentColor}
+  .copy.done span{color:var(--cream);mix-blend-mode:difference}
+
+  h2{font-size:clamp(11px,1.1vw,12.5px);letter-spacing:.28em;text-transform:uppercase;color:var(--muted);
+     font-weight:700;margin:clamp(34px,5vw,54px) 0 6px}
+  .h2note{font-size:clamp(13px,1.2vw,14px);margin:0 0 18px;color:var(--muted);max-width:90ch;text-wrap:pretty}
+
+  .anchors{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-top:22px}
+  .anchor{border-radius:var(--radius-card-sm);padding:22px;min-height:210px;display:flex;flex-direction:column;
+          justify-content:space-between;border:1px solid var(--line)}
+  .anchor .top{display:flex;justify-content:flex-end}
+  .anchor .nm{font-size:clamp(18px,1.8vw,23px);font-weight:600;line-height:1.1}
+  .anchor .hex{font-size:13px;letter-spacing:.1em;margin-top:8px;opacity:.75;font-variant-numeric:tabular-nums}
+  .anchor .role{font-size:12.5px;margin-top:12px;opacity:.72;line-height:1.45}
+
+  .ramps{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px;align-items:start}
+  .ramp{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-card-sm);
+        padding:20px 22px;box-shadow:var(--shadow-soft)}
+  .ramp .t{font-size:14.5px;font-weight:600;color:var(--charcoal);margin-bottom:4px}
+  .ramp .sub{font-size:12.5px;color:var(--muted);margin-bottom:12px;line-height:1.45}
+  .step{display:flex;align-items:center;gap:12px;padding:6px 0;color:var(--charcoal)}
+  .chip{width:46px;height:30px;border-radius:7px;border:1px solid var(--line);flex:none}
+  .step .k{font-size:12.8px;font-weight:600;flex:1;min-width:0}
+  .step .v{font-size:12px;color:var(--muted);letter-spacing:.06em;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+  .pairs{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+  .pair{border-radius:var(--radius-card-sm);min-height:148px;padding:18px;display:flex;flex-direction:column;
+        justify-content:space-between;border:1px solid var(--line)}
+  .pair .aa{font-family:var(--serif);font-size:38px;line-height:1}
+  .pair .lb{font-size:12.5px;font-weight:600;line-height:1.3}
+  .pair .cr{font-size:11.5px;opacity:.8;margin-top:4px;letter-spacing:.06em}
+
+  .accents{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+  .acc{border-radius:var(--radius-card-sm);min-height:130px;padding:18px;display:flex;flex-direction:column;
+       justify-content:space-between;color:var(--charcoal);border:1px solid var(--line)}
+  .acc .n{font-size:18px;font-weight:600}
+  .acc .m{font-size:12px;letter-spacing:.08em;opacity:.8}
+  .acc .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+
+  /* ── type specimens ─────────────────────────────────────── */
+  .type{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;align-items:start}
+  .face{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-card-sm);padding:24px;
+        box-shadow:var(--shadow-soft)}
+  .face .big{color:var(--charcoal);line-height:1;margin:0 0 14px;overflow-wrap:anywhere}
+  .face .nm{font-size:14.5px;font-weight:600;color:var(--charcoal)}
+  .face .meta{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.5}
+  .specimen{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-card-sm);
+            padding:clamp(20px,3vw,34px);box-shadow:var(--shadow-soft)}
+  .specimen h3{font-family:var(--sans);font-weight:400;letter-spacing:-.035em;color:var(--charcoal);
+               font-size:clamp(2rem,5vw,4rem);line-height:.92;margin:0;text-wrap:balance}
+  .specimen h3 em{font-family:var(--serif);font-style:italic;letter-spacing:-.025em}
+  .specimen p{max-width:72ch;text-wrap:pretty;letter-spacing:-.008em;line-height:1.6;font-size:clamp(14px,1.3vw,16px)}
+  .roles{width:100%;border-collapse:collapse;margin-top:6px;font-size:13px}
+  .roles th{text-align:left;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+            padding:0 12px 10px 0;font-weight:700;white-space:nowrap}
+  .roles td{padding:10px 12px 10px 0;border-top:1px solid var(--line);color:var(--charcoal);vertical-align:top}
+  .roles td.mono{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .scroll{overflow-x:auto}
+
+  /* ── buttons / stages / rules ───────────────────────────── */
+  .split2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px}
+  .btns{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-card-sm);padding:24px;
+        box-shadow:var(--shadow-soft)}
+  .btns.dark{background:var(--dark);border-color:var(--line-inverse)}
+  .btnrow{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  .btn{display:inline-flex;align-items:center;border-radius:999px;font-weight:600;font-size:14px;padding:12px 24px;line-height:1}
+  .btnlab{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;font-weight:700}
+  .btns.dark .btnlab{color:var(--lime);opacity:.8}
+
+  .split{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+  .stages{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+  .stage{border-radius:var(--radius-card-sm);padding:18px;color:#fff;min-height:152px;display:flex;
+         flex-direction:column;justify-content:space-between}
+  .stage .s{font-size:19px;font-weight:600}
+  .stage .h{font-size:12px;letter-spacing:.1em;opacity:.92}
+  .legacy{background:var(--track-soft);border:1px solid var(--line);border-radius:var(--radius-card-sm);
+          padding:22px;font-size:13.5px;line-height:1.6}
+  .legacy .t{font-size:14.5px;font-weight:700;color:var(--charcoal);margin-bottom:10px}
+  .legacy code,.rule code{font-family:var(--sans);font-weight:600;color:var(--charcoal)}
+
+  .rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px}
+  .rule{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-card-sm);padding:22px;
+        font-size:14px;line-height:1.6}
+  .rule b{color:var(--charcoal)}
+  .rule .no{color:var(--error);font-weight:700}
+  .rule .yes{color:var(--green);font-weight:700}
+
+  footer{margin-top:clamp(32px,5vw,54px);border-top:1px solid var(--line);padding-top:20px;display:flex;
+         flex-wrap:wrap;gap:8px;justify-content:space-between;font-size:12.5px;color:var(--muted);letter-spacing:.05em}
+
+  #toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);background:var(--ink);color:var(--lime);
+         font-size:13.5px;font-weight:600;padding:12px 22px;border-radius:999px;opacity:0;pointer-events:none;
+         transition:.25s var(--ease);z-index:99;box-shadow:var(--shadow-soft)}
+  #toast.on{opacity:1;transform:translate(-50%,0)}
+
+  @media (max-width:760px){
+    .stamp{position:static;text-align:left;margin-bottom:14px}
+  }
+  @media (max-width:620px){
+    .toolbar{position:static;border-radius:var(--radius-card-sm);padding:14px}
+    .hint{margin-left:0;width:100%}
+    .step .v{display:none}
+  }
+  @media print{.toolbar,.copy,#toast{display:none}}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head>
+<body><div class="page">
+
+  <div class="head">
+    <div class="stamp">Design System<br>feature/design-system</div>
+    <div class="eyebrow">Atrium — Brand palette &amp; type</div>
+    <h1>Cream, ink,<br><em>lime</em> &amp; amber.</h1>
+    <p class="lede">Single source of truth: <b>packages/ui/src/theme.css</b> — a Tailwind <b>@theme</b> block, so every
+      token is also a utility (<b>bg-lime</b>, <b>text-charcoal</b>). Warm cream ground, deep teal ink, lime as the one
+      bright, amber as the accent. Terracotta for state — never a traffic-light red.</p>
+  </div>
+
+  <div class="toolbar">
+    <span class="lb">Copy as</span>
+    <div class="seg" id="fmt">
+      <button data-fmt="tw" aria-pressed="true">Tailwind</button>
+      <button data-fmt="var" aria-pressed="false">CSS var</button>
+      <button data-fmt="hex" aria-pressed="false">HEX</button>
+    </div>
+    <span class="hint">Click any swatch — or its <b>copy</b> button — to put the value on your clipboard.</span>
+  </div>
+
+  <h2>Brand core</h2>
+  <div class="anchors">
+    <div class="anchor" data-tw="bg-ink" data-var="--color-ink" data-hex="#042F34" style="background:#042f34;color:#f3efe4;border-color:#042f34">
+      <div class="top"><button class="copy"><span>copy</span></button></div>
+      <div><div class="nm" style="color:#b8e89a">Ink</div><div class="hex">#042F34 · --color-ink</div>
+      <div class="role">Deep teal. Dark grounds, primary button fill, every highlight element.</div></div></div>
+    <div class="anchor" data-tw="bg-lime" data-var="--color-lime" data-hex="#B8E89A" style="background:#b8e89a;color:#16232b">
+      <div class="top"><button class="copy"><span>copy</span></button></div>
+      <div><div class="nm">Lime</div><div class="hex">#B8E89A · --color-lime</div>
+      <div class="role">The one bright. Text on ink, lead action on dark, the hero light.</div></div></div>
+    <div class="anchor" data-tw="bg-cream" data-var="--color-cream" data-hex="#F3EFE4" style="background:#f3efe4;color:#16232b">
+      <div class="top"><button class="copy"><span>copy</span></button></div>
+      <div><div class="nm">Cream</div><div class="hex">#F3EFE4 · --color-cream</div>
+      <div class="role">The page. Warm, not cool — this is what replaced the old cloud ramp.</div></div></div>
+    <div class="anchor" data-tw="bg-amber" data-var="--color-amber" data-hex="#FFC933" style="background:#ffc933;color:#16232b">
+      <div class="top"><button class="copy"><span>copy</span></button></div>
+      <div><div class="nm">Amber</div><div class="hex">#FFC933 · --color-amber</div>
+      <div class="role">Accent fill: tags, the accent button. One per view.</div></div></div>
+    <div class="anchor" data-tw="text-charcoal" data-var="--color-charcoal" data-hex="#16232B" style="background:#16232b;color:#f3efe4;border-color:#16232b">
+      <div class="top"><button class="copy"><span>copy</span></button></div>
+      <div><div class="nm" style="color:#f3efe4">Charcoal</div><div class="hex">#16232B · --color-charcoal</div>
+      <div class="role">What text is set in — not pure black, and not ink. Also <b>--color-dark</b>.</div></div></div>
+  </div>
+
+  <h2>The ramps</h2>
+  <p class="h2note">All of it lives in one <b>@theme</b> block. Tailwind generates the utilities; nothing else defines a colour.</p>
+  <div class="ramps">
+    <div class="ramp"><div class="t">Neutrals</div><div class="sub">Cream is the page, off-white the warm tile, card the white one, cool the odd-one-out neutral.</div>
+      <div class="step" data-tw="bg-cream" data-var="--color-cream" data-hex="#F3EFE4"><span class="chip" style="background:#f3efe4"></span><span class="k">cream</span><span class="v">#F3EFE4</span><button class="copy"><span>copy</span></button></div>
+      <div class="step" data-tw="bg-off-white" data-var="--color-off-white" data-hex="#FAF9F5"><span class="chip" style="background:#faf9f5"></span><span class="k">off-white</span><span class="v">#FAF9F5</span><button class="copy"><span>copy</span></button></div>
+      <div class="step" data-tw="bg-card" data-var="--color-card" data-hex="#FFFFFF"><span class="chip" style="background:#fff"></span><span class="k">card</span><span class="v">#FFFFFF</span><button class="copy"><span>copy</span></button></div>
+      <div class="step" data-tw="bg-cool" data-var="--color-cool" data-hex="#E4EEF0"><span class="chip" style="background:#e4eef0"></span><span class="k">cool</span><span class="v">#E4EEF0</span><button class="copy"><span>copy</span></button></div>
+      <div class="step" data-tw="bg-track" data-var="--color-track" data-hex="#E6E1D4"><span class="chip" style="background:#e6e1d4"></span><span class="k">track</span><span class="v">#E6E1D4</span><button class="copy"><span>copy</span></button></div>
+      <div class="step" data-tw="bg-track-soft" data-var="--color-track-soft" data-hex="#ECE7DB"><span class="chip" style="background:#ece7db"></span><span class="k">track-soft</span><span class="v">#ECE7DB</span><button class="copy"><span>copy</span></button></div>
+      <div class="step" data-tw="bg-pending" data-var="--color-pending" data-hex="#C7CEC9"><span class="chip" style="background:#c7cec9"></span><span class="k">pending</span><span class="v">#C7CEC9</span><button class="copy"><span>copy</span></button></div></div>
+
+    <div class="ramp"><div class="t">Brand core</div><div class="sub">Ink is the ground and the highlight; dark is the softer panel; lime is the only bright in the system.</div>
+      <div class="step" data-tw="bg-ink" data-var="--color-ink" data-hex="#042F34"><span class="chip" style="background:#042f34"></span><span class="k">ink</span><span class="v">#042F34</span><button class="copy"><span>copy</span></button></div>
+      <div class="step" data-tw="bg-dark" data-var="--color-dark" data-hex="#16232B"><span class="chip" style="background:#16232b"></span><span class="k">dark</span><span class="v">#16232B</span><button class="copy"><span>copy</span></button></div>
+      <div class="step" data-tw="bg-lime" data-var="--color-lime" data-hex="#B8E89A"><span class="chip" style="background:#b8e89a"></span><span class="k">lime</span><span class="v">#B8E89A</span><button class="copy"><span>copy</span></button></div>
+      <div class="t" style="margin-top:18px">Greens</div><div class="sub">Teal-leaning, not grass. Gradient stops and the success colour.</div>
+      <div class="step" data-tw="bg-green" data-var="--color-green" data-hex="#0E6E64"><span class="chip" style="background:#0e6e64"></span><span class="k">green</span><span class="v">#0E6E64</span><button class="copy"><span>copy</span></button></div>
+      <div class="step" data-tw="bg-green-fill" data-var="--color-green-fill" data-hex="#1E8C7C"><span class="chip" style="background:#1e8c7c"></span><span class="k">green-fill</span><span class="v">#1E8C7C</span><button class="copy"><span>copy</span></button></div>
+      <div class="step" data-tw="text-green-ink" data-var="--color-green-ink" data-hex="#0A4249"><span class="chip" style="background:#0a4249"></span><span class="k">green-ink</span><span class="v">#0A4249</span><button class="copy"><span>copy</span></button></div>
+      <div class="step" data-tw="bg-green-soft" data-var="--color-green-soft" data-hex="#DCEFE9"><span class="chip" style="background:#dcefe9"></span><span class="k">green-soft</span><span class="v">#DCEFE9</span><button class="copy"><span>copy</span></button></div></div>
+
+    <div class="ramp"><div class="t">Amber</div><div class="sub">Fill, pressed fill, tint, and the ink that reads on the tint.</div>
+      <div class="step" data-tw="bg-amber" data-var="--color-amber" data-hex="#FFC933"><span class="chip" style="background:#ffc933"></span><span class="k">amber</span><span class="v">#FFC933</span><button class="copy"><span>copy</span></button></div>
+      <div class="step" data-tw="bg-amber-fill" data-var="--color-amber-fill" data-hex="#F0B21F"><span class="chip" style="background:#f0b21f"></span><span class="k">amber-fill</span><span class="v">#F0B21F</span><button class="copy"><span>copy</span></button></div>
+      <div class="step" data-tw="bg-amber-soft" data-var="--color-amber-soft" data-hex="#FDEEC4"><span class="chip" style="background:#fdeec4"></span><span class="k">amber-soft</span><span class="v">#FDEEC4</span><button class="copy"><span>copy</span></button></div>
+      <div class="step" data-tw="text-amber-ink" data-var="--color-amber-ink" data-hex="#8A6410"><span class="chip" style="background:#8a6410"></span><span class="k">amber-ink</span><span class="v">#8A6410</span><button class="copy"><span>copy</span></button></div>
+      <div class="t" style="margin-top:18px">State — terracotta</div><div class="sub">Warm, never a traffic-light red.</div>
+      <div class="step" data-tw="bg-red-fill" data-var="--color-red-fill" data-hex="#E08A5B"><span class="chip" style="background:#e08a5b"></span><span class="k">red-fill</span><span class="v">#E08A5B</span><button class="copy"><span>copy</span></button></div>
+      <div class="step" data-tw="bg-red-soft" data-var="--color-red-soft" data-hex="#F7E2D6"><span class="chip" style="background:#f7e2d6"></span><span class="k">red-soft</span><span class="v">#F7E2D6</span><button class="copy"><span>copy</span></button></div>
+      <div class="step" data-tw="text-red-ink" data-var="--color-red-ink" data-hex="#C0653A"><span class="chip" style="background:#c0653a"></span><span class="k">red-ink</span><span class="v">#C0653A</span><button class="copy"><span>copy</span></button></div>
+      <div class="step" data-tw="bg-red-tint" data-var="--color-red-tint" data-hex="#F0B79B"><span class="chip" style="background:#f0b79b"></span><span class="k">red-tint</span><span class="v">#F0B79B</span><button class="copy"><span>copy</span></button></div>
+      <div class="step" data-tw="text-error" data-var="--color-error" data-hex="#B4553A"><span class="chip" style="background:#b4553a"></span><span class="k">error</span><span class="v">#B4553A</span><button class="copy"><span>copy</span></button></div></div>
+  </div>
+
+  <h2>Text &amp; line</h2>
+  <p class="h2note">Ink tints flattened over cream so they work as solid colours. One deliberate departure from the brand sheet, marked below.</p>
+  <div class="ramps">
+    <div class="ramp"><div class="t">Text</div><div class="sub">Headlines and body sit in charcoal and its tints — never in ink, never in pure black.</div>
+      <div class="step" data-tw="text-charcoal" data-var="--color-charcoal" data-hex="#16232B"><span class="chip" style="background:#16232b"></span><span class="k">charcoal — headlines</span><span class="v">13.96:1</span><button class="copy"><span>copy</span></button></div>
+      <div class="step" data-tw="text-body" data-var="--color-body" data-hex="#545C5F"><span class="chip" style="background:#545c5f"></span><span class="k">body</span><span class="v">5.95:1</span><button class="copy"><span>copy</span></button></div>
+      <div class="step" data-tw="text-muted" data-var="--color-muted" data-hex="#61686A"><span class="chip" style="background:#61686a"></span><span class="k">muted</span><span class="v">4.94:1</span><button class="copy"><span>copy</span></button></div>
+      <div class="step" data-tw="text-muted-soft" data-var="--color-muted-soft" data-hex="#8B9092"><span class="chip" style="background:#8b9092"></span><span class="k">muted-soft — non-text only</span><span class="v">2.81:1</span><button class="copy"><span>copy</span></button></div></div>
+    <div class="ramp"><div class="t">Line</div><div class="sub">Hairlines are alpha, so they sit on any ground without a second token.</div>
+      <div class="step" data-tw="border-line" data-var="--color-line" data-hex="rgba(22,35,43,0.14)"><span class="chip" style="background:#f3efe4;box-shadow:inset 0 0 0 3px rgba(22,35,43,.14)"></span><span class="k">line</span><span class="v">charcoal @ 14%</span><button class="copy"><span>copy</span></button></div>
+      <div class="step" data-tw="border-line-inverse" data-var="--color-line-inverse" data-hex="rgba(243,239,228,0.2)"><span class="chip" style="background:#042f34;box-shadow:inset 0 0 0 3px rgba(243,239,228,.2)"></span><span class="k">line-inverse</span><span class="v">cream @ 20%</span><button class="copy"><span>copy</span></button></div></div>
+    <div class="ramp" style="background:var(--amber-soft)"><div class="t">Departure from the sheet</div>
+      <div class="sub" style="color:var(--amber-ink)">The sheet sets muted at 55% — that measures 3.55:1 on cream and cannot carry body text.
+        Ours is 66%: <b>4.94:1</b>, clearing AA. It is the one value on the list that is not the sheet's.</div>
+      <div class="step" data-tw="text-muted" data-var="--color-muted" data-hex="#61686A"><span class="chip" style="background:#61686a"></span><span class="k">muted (ours, 66%)</span><span class="v">4.94:1 · AA</span><button class="copy"><span>copy</span></button></div>
+      <div class="step"><span class="chip" style="background:#8b9092"></span><span class="k">sheet's 55%</span><span class="v">3.55:1 · fails</span></div></div>
+  </div>
+
+  <h2>Approved pairings — contrast on cream and on ink</h2>
+  <p class="h2note">Every pairing below clears AA for body text; most clear AAA. Measured, not estimated.</p>
+  <div class="pairs">
+    <div class="pair" data-tw="bg-ink text-lime" data-var="--color-lime" data-hex="#B8E89A" style="background:#042f34"><div class="aa" style="color:#b8e89a">Aa</div>
+      <div><div class="lb" style="color:#b8e89a">Lime on Ink</div><div class="cr" style="color:#f3efe4">10.30:1 · AAA</div></div></div>
+    <div class="pair" data-tw="bg-ink text-cream" data-var="--color-cream" data-hex="#F3EFE4" style="background:#042f34"><div class="aa" style="color:#f3efe4">Aa</div>
+      <div><div class="lb" style="color:#f3efe4">Cream on Ink</div><div class="cr" style="color:#b8e89a">12.51:1 · AAA</div></div></div>
+    <div class="pair" data-tw="bg-lime text-charcoal" data-var="--color-lime" data-hex="#B8E89A" style="background:#b8e89a"><div class="aa" style="color:#16232b">Aa</div>
+      <div><div class="lb" style="color:#16232b">Charcoal on Lime</div><div class="cr" style="color:#16232b;opacity:.7">11.49:1 · AAA</div></div></div>
+    <div class="pair" data-tw="bg-amber text-charcoal" data-var="--color-amber" data-hex="#FFC933" style="background:#ffc933"><div class="aa" style="color:#16232b">Aa</div>
+      <div><div class="lb" style="color:#16232b">Charcoal on Amber</div><div class="cr" style="color:#16232b;opacity:.7">10.43:1 · AAA</div></div></div>
+    <div class="pair" data-tw="bg-cream text-charcoal" data-var="--color-cream" data-hex="#F3EFE4" style="background:#f3efe4"><div class="aa" style="color:#16232b">Aa</div>
+      <div><div class="lb" style="color:#16232b">Charcoal on Cream</div><div class="cr" style="color:#61686a">13.96:1 · AAA</div></div></div>
+    <div class="pair" data-tw="bg-coral text-charcoal" data-var="--color-coral" data-hex="#E67A6F" style="background:#e67a6f"><div class="aa" style="color:#16232b">Aa</div>
+      <div><div class="lb" style="color:#16232b">Charcoal on Coral</div><div class="cr" style="color:#16232b;opacity:.7">5.63:1 · AA</div></div></div>
+  </div>
+
+  <h2>Type — three faces, no more</h2>
+  <p class="h2note">Declared once in <b>theme.css</b> and loaded by the Next font loader. Headings are set in the sans;
+    the serif appears <em>only</em> inside an <b>&lt;em&gt;</b>. That single rule is the brand's voice on the page.</p>
+  <div class="type">
+    <div class="face">
+      <div class="big" style="font-family:var(--sans);font-size:clamp(2.6rem,5vw,3.6rem);letter-spacing:-.035em">Aa Bb 123</div>
+      <div class="nm">Inter Tight — <code>font-sans</code></div>
+      <div class="meta">Everything by default: headings (weight 400, tracking −0.035em), body, UI, numerals.
+        78 heading uses across the apps.</div>
+    </div>
+    <div class="face">
+      <div class="big" style="font-family:var(--serif);font-style:italic;font-size:clamp(2.6rem,5vw,3.6rem);letter-spacing:-.025em">Aa Bb 123</div>
+      <div class="nm">Instrument Serif italic — <code>font-serif</code></div>
+      <div class="meta">The emphasis face, never a whole heading. <code>:where(h1,h2,h3,h4) em</code> switches to it
+        automatically — write <b>&lt;em&gt;</b> and the type system does the rest.</div>
+    </div>
+    <div class="face">
+      <div class="big" style="font-family:var(--script);font-size:clamp(2.2rem,4.4vw,3rem)">Aa Bb</div>
+      <div class="nm">Nothing You Could Do — <code>font-script</code></div>
+      <div class="meta">In reserve. Only <code>ScriptAccent</code> in <b>@atrium/ui/legacy</b> uses it — 3 call sites.
+        Do not reach for it in new work.</div>
+    </div>
+  </div>
+
+  <div class="specimen" style="margin-top:18px">
+    <h3>Traffic that <em>turns into tables</em></h3>
+    <p style="margin-top:18px">The sans carries the sentence and the serif italic carries the promise inside it.
+      Body copy caps at <b>72ch</b>, sets <b>text-wrap: pretty</b>, and tracks −0.008em; headings use
+      <b>text-wrap: balance</b>. Components opt into a role rather than picking a size.</p>
+    <div class="scroll"><table class="roles">
+      <thead><tr><th>Role</th><th>Class</th><th>Size</th><th>Leading</th><th>Tracking</th></tr></thead>
+      <tbody>
+        <tr><td>Page title</td><td class="mono">.type-page-title</td><td class="mono">clamp(3.75rem, 6.8vw, 7rem)</td><td class="mono">0.90</td><td class="mono">−0.030em</td></tr>
+        <tr><td>Section title</td><td class="mono">.type-section-title</td><td class="mono">clamp(3rem, 5vw, 5.5rem)</td><td class="mono">0.92</td><td class="mono">−0.028em</td></tr>
+        <tr><td>Card title</td><td class="mono">.type-card-title</td><td class="mono">clamp(1.75rem, 2.4vw, 2.5rem)</td><td class="mono">1.02</td><td class="mono">−0.022em</td></tr>
+        <tr><td>Lead</td><td class="mono">.type-lead</td><td class="mono">clamp(1.125rem, 1.5vw, 1.375rem)</td><td class="mono">1.60</td><td class="mono">−0.008em</td></tr>
+        <tr><td>Body</td><td class="mono">--type-body</td><td class="mono">1rem</td><td class="mono">1.60</td><td class="mono">−0.008em</td></tr>
+        <tr><td>Caption</td><td class="mono">--type-caption</td><td class="mono">0.875rem</td><td class="mono">1.60</td><td class="mono">—</td></tr>
+        <tr><td>Eyebrow</td><td class="mono">--type-eyebrow</td><td class="mono">0.75rem</td><td class="mono">1.00</td><td class="mono">+0.14em, uppercase</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <h2>The button system — one set, no reimplementation</h2>
+  <p class="h2note">Colour decisions are already made in <b>@atrium/ui</b>. Apps import <b>Button</b>; they do not re-pick fills.</p>
+  <div class="split2">
+    <div class="btns"><div class="btnlab">On a light ground</div>
+      <div class="btnrow">
+        <span class="btn" style="background:#042f34;color:#b8e89a;box-shadow:var(--shadow-soft)">primary</span>
+        <span class="btn" style="background:#fff;color:#16232b;border:1px solid var(--line);box-shadow:var(--shadow-soft)">secondary</span>
+        <span class="btn" style="background:#ffc933;color:#16232b;box-shadow:var(--shadow-soft)">accent</span>
+        <span class="btn" style="background:transparent;color:#16232b;border:1px solid var(--line)">outline</span>
+        <span class="btn" style="background:transparent;color:#16232b">ghost</span>
+      </div></div>
+    <div class="btns dark"><div class="btnlab">On a dark ground</div>
+      <div class="btnrow">
+        <span class="btn" style="background:#b8e89a;color:#16232b;box-shadow:var(--shadow-soft)">mint → lime fill</span>
+        <span class="btn" style="background:#f3efe4;color:#16232b;box-shadow:var(--shadow-soft)">light</span>
+        <span class="btn" style="background:transparent;color:#f3efe4;border:1px solid rgba(243,239,228,.25)">outlineLight</span>
+      </div>
+      <div style="margin-top:16px;font-size:12.5px;color:#f3efe4;opacity:.65;line-height:1.5">
+        The <b>mint</b> variant name is historical — it fills with lime. Focus ring is <b>green-fill</b> everywhere.
+      </div></div>
+  </div>
+
+  <h2>Editorial accents — campaign rotation only</h2>
+  <p class="h2note">One leads, one supports, the rest stay in reserve. No component may default to one.</p>
+  <div class="accents">
+    <div class="acc" data-tw="bg-coral" data-var="--color-coral" data-hex="#E67A6F" style="background:#e67a6f">
+      <div class="top"><div class="n">Coral</div><button class="copy"><span>copy</span></button></div><div class="m">#E67A6F · --color-coral · 5.63:1</div></div>
+    <div class="acc" data-tw="bg-lilac" data-var="--color-lilac" data-hex="#D2B4EE" style="background:#d2b4ee">
+      <div class="top"><div class="n">Lilac</div><button class="copy"><span>copy</span></button></div><div class="m">#D2B4EE · --color-lilac · 8.79:1</div></div>
+    <div class="acc" data-tw="bg-sage" data-var="--color-sage" data-hex="#A8C89A" style="background:#a8c89a">
+      <div class="top"><div class="n">Sage</div><button class="copy"><span>copy</span></button></div><div class="m">#A8C89A · --color-sage · 8.70:1</div></div>
+    <div class="acc" data-tw="bg-periwinkle" data-var="--color-periwinkle" data-hex="#7E9BF0" style="background:#7e9bf0">
+      <div class="top"><div class="n">Periwinkle</div><button class="copy"><span>copy</span></button></div><div class="m">#7E9BF0 · --color-periwinkle · 5.98:1</div></div>
+  </div>
+
+  <h2>Growth Engine stages &amp; the legacy layer</h2>
+  <p class="h2note">Stage colours are tokenized so the services menu and the engine diagram can't drift. Current values come from the greens and amber, not from the retired sheet.</p>
+  <div class="split">
+    <div class="stages">
+      <div class="stage" data-tw="var(--stage-generate)" data-var="--stage-generate" data-hex="#1E8C7C" style="background:#1e8c7c"><div class="h">Stage 01</div><div><div class="s">Generate</div><div class="h">--stage-generate · #1E8C7C</div></div></div>
+      <div class="stage" data-tw="var(--stage-convert)" data-var="--stage-convert" data-hex="#F0B21F" style="background:#f0b21f;color:#16232b"><div class="h">Stage 02</div><div><div class="s">Convert</div><div class="h">--stage-convert · #F0B21F</div></div></div>
+      <div class="stage" data-tw="var(--stage-retain)" data-var="--stage-retain" data-hex="#0E6E64" style="background:#0e6e64"><div class="h">Stage 03</div><div><div class="s">Retain</div><div class="h">--stage-retain · #0E6E64</div></div></div>
+    </div>
+    <div class="legacy"><div class="t">The teal/mint sheet is retired</div>
+      <code>tokens/tokens.css</code> still ships the old Deep Teal + Mint ramp, but <code>compat.css</code> repoints all
+      21 raw values at the ones above — <b>--mint-400</b> now resolves to lime, <b>--cloud-200</b> to cream. It is
+      scaffolding with an expiry date: author against <code>theme.css</code> only, and delete a line from
+      <code>compat.css</code> each time a surface migrates.
+    </div>
+  </div>
+
+  <h2>Rules of use</h2>
+  <div class="rules">
+    <div class="rule"><span class="yes">DO</span> — use the Tailwind utility the theme generates (<b>bg-lime</b>,
+      <b>text-charcoal</b>, <b>border-line</b>). Set text in charcoal / body / muted; keep lime for one bright moment
+      per view; write <b>&lt;em&gt;</b> for emphasis and let the serif rule fire; import <b>Button</b>, <b>Tag</b>,
+      <b>Card</b> from <b>@atrium/ui</b> rather than restyling a fill.</div>
+    <div class="rule"><span class="no">DON'T</span> — no new hex in a component, no <b>muted-soft</b> under text
+      (2.81:1), no traffic-light red for errors (terracotta only), no whole heading in the serif, no editorial accent
+      as a component default, and nothing authored against the old <b>--mint-*</b> / <b>--cloud-*</b> names.</div>
+  </div>
+
+  <footer><span>Atrium Design System · Colour &amp; type</span><span>Source: packages/ui/src/theme.css · type roles: apps/atrium.website/app/globals.css</span></footer>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  var fmt = 'tw';
+  var seg = document.getElementById('fmt');
+  var toast = document.getElementById('toast');
+  var timer;
+
+  seg.addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-fmt]');
+    if (!b) return;
+    fmt = b.dataset.fmt;
+    seg.querySelectorAll('button').forEach(function (x) {
+      x.setAttribute('aria-pressed', String(x === b));
+    });
+  });
+
+  function valueFor(el) {
+    if (fmt === 'hex') return el.dataset.hex || '';
+    if (fmt === 'var') return 'var(' + (el.dataset.var || '') + ')';
+    return el.dataset.tw || '';
+  }
+
+  function say(msg) {
+    toast.textContent = msg;
+    toast.classList.add('on');
+    clearTimeout(timer);
+    timer = setTimeout(function () { toast.classList.remove('on'); }, 1600);
+  }
+
+  function copy(text) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    // file:// fallback — execCommand still works there.
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); } finally { ta.remove(); }
+    return Promise.resolve();
+  }
+
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest('[data-hex]');
+    if (!el) return;
+    var text = valueFor(el);
+    if (!text) return;
+    copy(text).then(function () {
+      say('Copied  ' + text);
+      var btn = el.querySelector('.copy');
+      if (!btn) return;
+      btn.classList.add('done');
+      setTimeout(function () { btn.classList.remove('done'); }, 1200);
+    });
+  });
+
+  // Make every swatch keyboard-reachable, not just the copy buttons.
+  document.querySelectorAll('[data-hex]').forEach(function (el) {
+    if (el.querySelector('.copy')) el.style.cursor = 'pointer';
+  });
+})();
+</script>
+</body></html>

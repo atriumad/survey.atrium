@@ -10,8 +10,11 @@ import type { Location } from "@/lib/types";
 export function LocationsSection({ locations }: { locations: Location[] }) {
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-lg font-medium">Locales</h2>
-      <form action={createLocation} className="flex gap-2 flex-wrap items-end">
+      <h2 className="text-xl font-medium text-ink">Locales</h2>
+      <form
+        action={createLocation}
+        className="flex gap-2 flex-wrap items-end rounded-[26px] bg-white p-4 shadow-card"
+      >
         <Input name="name" placeholder="Nombre" required className="w-40" />
         <Input name="slug" placeholder="slug (ej: centro)" required className="w-40" />
         <Input name="googlePlaceId" placeholder="Google Place ID (opcional)" className="w-56" />
@@ -36,11 +39,13 @@ function LocationRow({ location }: { location: Location }) {
   }, [location.slug]);
 
   return (
-    <div className="flex items-center gap-4 border rounded-lg p-3">
-      {qrDataUrl && <img src={qrDataUrl} alt={`QR ${location.name}`} className="w-16 h-16" />}
+    <div className="flex items-center gap-4 rounded-[18px] bg-white p-4 shadow-card">
+      {qrDataUrl && (
+        <img src={qrDataUrl} alt={`QR ${location.name}`} className="w-16 h-16" />
+      )}
       <div className="flex-1">
-        <p className="font-medium">{location.name}</p>
-        <p className="text-sm text-muted-foreground">/r/{location.slug}</p>
+        <p className="font-medium text-ink">{location.name}</p>
+        <p className="text-sm text-body">/r/{location.slug}</p>
       </div>
       {qrDataUrl && (
         <a href={qrDataUrl} download={`qr-${location.slug}.png`}>

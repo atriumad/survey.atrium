@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/get-profile";
 import { summarizeReviews, calculateConversionRate } from "@/lib/metrics";
 import { LocationFilter } from "./location-filter";
+import { Card, CardContent } from "@/components/ui/card";
 import type { Review } from "@/lib/types";
 
 export default async function DashboardHomePage({
@@ -38,7 +39,7 @@ export default async function DashboardHomePage({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold">Metricas</h1>
+        <h1 className="text-3xl font-serif italic text-ink">Metricas</h1>
         {profile.role === "admin" && <LocationFilter locations={locations ?? []} />}
       </div>
 
@@ -52,17 +53,19 @@ export default async function DashboardHomePage({
       </div>
 
       <div>
-        <h2 className="text-lg font-medium mb-2">Distribucion de estrellas</h2>
-        <div className="flex gap-2 items-end h-40">
+        <h2 className="text-xl font-medium text-ink mb-3">Distribucion de estrellas</h2>
+        <div className="flex gap-3 items-end h-40">
           {([1, 2, 3, 4, 5] as const).map((star) => (
-            <div key={star} className="flex flex-col items-center gap-1 flex-1">
+            <div key={star} className="flex flex-col items-center gap-2 flex-1">
               <div
-                className="bg-primary w-full rounded-t"
+                className={`w-full rounded-t-[12px] transition-all ${
+                  star <= 3 ? "bg-amber" : "bg-green-fill"
+                }`}
                 style={{
                   height: `${summary.total > 0 ? (summary.starDistribution[star] / summary.total) * 100 : 0}%`,
                 }}
               />
-              <span className="text-sm text-muted-foreground">{star}★</span>
+              <span className="text-sm text-body">{star}★</span>
             </div>
           ))}
         </div>
@@ -73,9 +76,11 @@ export default async function DashboardHomePage({
 
 function MetricCard({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="border rounded-lg p-4">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="text-2xl font-semibold">{value}</p>
-    </div>
+    <Card size="sm" className="p-4">
+      <CardContent className="p-0 flex flex-col gap-1">
+        <p className="text-xs uppercase tracking-wide text-body">{label}</p>
+        <p className="text-3xl font-semibold text-ink">{value}</p>
+      </CardContent>
+    </Card>
   );
 }

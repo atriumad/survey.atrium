@@ -1,50 +1,243 @@
 "use client";
 
-import { useState } from "react";
+import { FormEvent, useState } from "react";
+import { unstable_rethrow } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "cn";
 import { submitReview } from "./actions";
 
+const STEPS = ["Correo", "Tu opinión", "Google"];
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export function ReviewForm({ locationSlug }: { locationSlug: string }) {
+  const [step, setStep] = useState(0);
+  const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [commentError, setCommentError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const commentRequired = rating > 0 && rating <= 3;
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const qualifiesForShare = rating >= 4;
+  const stepCount = qualifiesForShare ? 3 : 2;
+
+  function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (step === 0) handleEmailNext();
+    else if (step === 1) handleOpinionNext();
+  }
+
+  function handleEmailNext() {
+    const value = email.trim().toLowerCase();
+    if (!value) {
+      setEmailError("Ingresá tu correo electrónico.");
+      return;
+    }
+    if (!EMAIL_RE.test(value)) {
+      setEmailError("Ingresá un correo electrónico válido.");
+      return;
+    }
+    setEmailError(null);
+    setStep(1);
+  }
+
+  function handleOpinionNext() {
+    if (rating > 0 && rating <= 3 && comment.trim().length === 0) {
+      setCommentError("Contanos qué pasó para poder mejorar.");
+      return;
+    }
+    setCommentError(null);
+    if (qualifiesForShare) {
+      setStep(2);
+      return;
+    }
+    void submit(false);
+  }
+
+  async function submit(sharedToGoogle: boolean) {
+    setPending(true);
+    setSubmitError(null);
+    try {
+      const formData = new FormData();
+      formData.set("locationSlug", locationSlug);
+      formData.set("email", email.trim().toLowerCase());
+      formData.set("rating", String(rating));
+      formData.set("comment", comment);
+      formData.set("sharedToGoogle", String(sharedToGoogle));
+      await submitReview(formData);
+    } catch (err) {
+      unstable_rethrow(err);
+      setSubmitError(err instanceof Error ? err.message : "No pudimos guardar tu review.");
+    } finally {
+      setPending(false);
+    }
+  }
 
   return (
     <form
-      action={async (formData) => {
-        setPending(true);
-        await submitReview(formData);
-      }}
-      className="flex flex-col gap-4"
+      onSubmit={handleSubmit}
+      noValidate
+      className="flex flex-col gap-5 rounded-[26px] bg-white p-6 shadow-card"
     >
-      <input type="hidden" name="locationSlug" value={locationSlug} />
-      <input type="hidden" name="rating" value={rating} />
-
-      <div className="flex gap-2 justify-center" role="radiogroup" aria-label="Calificacion">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <button
-            key={star}
-            type="button"
-            aria-label={`${star} estrellas`}
-            aria-pressed={rating === star}
-            onClick={() => setRating(star)}
-            className={`text-4xl transition-colors ${star <= rating ? "text-yellow-400" : "text-muted-foreground"}`}
-          >
-            ★
-          </button>
+      <div className="flex items-center justify-center gap-1" aria-label="Progreso">
+        {STEPS.slice(0, stepCount).map((label, i) => (
+          <div key={label} className="flex items-center gap-1">
+            {i > 0 && (
+              <div className={cn("h-px w-6", i <= step ? "bg-amber" : "bg-ink/15")} />
+            )}
+            <span
+              className={cn(
+                "flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold",
+                i === step
+                  ? "bg-ink text-cream"
+                  : i < step
+                    ? "bg-amber text-ink"
+                    : "border border-ink/15 text-body/60"
+              )}
+            >
+              {i < step ? "✓" : i + 1}
+            </span>
+          </div>
         ))}
       </div>
 
-      <Textarea
-        name="comment"
-        placeholder={commentRequired ? "Contanos que paso (requerido)" : "Contanos tu experiencia (opcional)"}
-        required={commentRequired}
-      />
+      {step === 0 && (
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="email">Correo electrónico</Label>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              inputMode="email"
+              placeholder="tucorreo@ejemplo.com"
+              className="h-11"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (emailError) setEmailError(null);
+              }}
+              aria-invalid={emailError ? true : undefined}
+            />
+            {emailError && <p className="text-sm text-destructive">{emailError}</p>}
+          </div>
+          <Button type="submit" size="lg" className="h-11 rounded-[18px]">
+            Continuar
+          </Button>
+        </div>
+      )}
 
-      <Button type="submit" disabled={rating === 0 || pending}>
-        {pending ? "Enviando..." : "Enviar"}
-      </Button>
+      {step === 1 && (
+        <div className="flex flex-col gap-5">
+          <div className="flex gap-2 justify-center" role="radiogroup" aria-label="Calificación">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                type="button"
+                aria-label={`${star} estrellas`}
+                aria-pressed={rating === star}
+                onClick={() => setRating(star)}
+                className={cn(
+                  "text-4xl transition-all",
+                  star <= rating ? "text-amber scale-110" : "text-ink/15 hover:text-amber/60"
+                )}
+              >
+                ★
+              </button>
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="comment">
+              {commentRequired(rating) ? "Comentario (requerido)" : "Comentario (opcional)"}
+            </Label>
+            <Textarea
+              id="comment"
+              name="comment"
+              placeholder={
+                commentRequired(rating)
+                  ? "Contanos qué pasó para poder mejorar"
+                  : "Contanos tu experiencia"
+              }
+              className="min-h-28"
+              value={comment}
+              onChange={(e) => {
+                setComment(e.target.value);
+                if (commentError) setCommentError(null);
+              }}
+              aria-invalid={commentError ? true : undefined}
+            />
+            {commentError && <p className="text-sm text-destructive">{commentError}</p>}
+          </div>
+
+          <div className="flex gap-3">
+            <Button
+              type="button"
+              variant="ghost"
+              size="lg"
+              className="h-11 rounded-[18px]"
+              onClick={() => setStep(0)}
+            >
+              Atrás
+            </Button>
+            <Button
+              type="submit"
+              size="lg"
+              className="h-11 flex-1 rounded-[18px]"
+              disabled={rating === 0 || pending}
+            >
+              {qualifiesForShare ? "Continuar" : pending ? "Enviando..." : "Enviar"}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {step === 2 && (
+        <div className="flex flex-col gap-4">
+          <h2 className="text-lg font-semibold text-ink text-center">
+            ¿Querés compartir tu opinión en Google?
+          </h2>
+          <div className="flex flex-col gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              className="h-11 rounded-[18px]"
+              disabled={pending}
+              onClick={() => void submit(false)}
+            >
+              No, gracias
+            </Button>
+            <Button
+              type="button"
+              size="lg"
+              className="h-11 rounded-[18px]"
+              disabled={pending}
+              onClick={() => void submit(true)}
+            >
+              {pending ? "Enviando..." : "Sí, compartir"}
+            </Button>
+          </div>
+          <button
+            type="button"
+            className="text-sm text-body underline underline-offset-2 self-center"
+            onClick={() => setStep(1)}
+          >
+            Atrás
+          </button>
+        </div>
+      )}
+
+      {submitError && <p className="text-sm text-destructive text-center">{submitError}</p>}
     </form>
   );
+}
+
+function commentRequired(rating: number) {
+  return rating > 0 && rating <= 3;
 }

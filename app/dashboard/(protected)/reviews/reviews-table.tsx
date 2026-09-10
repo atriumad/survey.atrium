@@ -24,31 +24,35 @@ export function ReviewsTable({ reviews }: { reviews: Review[] }) {
           Exportar CSV
         </Button>
       </div>
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b text-left">
-            <th className="p-2">Fecha</th>
-            <th className="p-2">Rating</th>
-            <th className="p-2">Clasificacion</th>
-            <th className="p-2">Comentario</th>
-          </tr>
-        </thead>
-        <tbody>
-          {reviews.map((review) => (
-            <tr key={review.id} className="border-b">
-              <td className="p-2">{review.created_at.slice(0, 10)}</td>
-              <td className="p-2">{review.rating}★</td>
-              <td className="p-2">
-                <Badge variant={review.classification === "good" ? "default" : "destructive"}>
-                  {review.classification}
-                </Badge>
-              </td>
-              <td className="p-2">{review.comment ?? "-"}</td>
+      <div className="rounded-[26px] bg-white overflow-hidden shadow-card">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-cool text-left text-xs uppercase tracking-wide text-body">
+              <th className="p-3 font-medium">Fecha</th>
+              <th className="p-3 font-medium">Rating</th>
+              <th className="p-3 font-medium">Clasificacion</th>
+              <th className="p-3 font-medium">Comentario</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-      {reviews.length === 0 && <p className="text-muted-foreground text-center py-8">Sin reviews todavia.</p>}
+          </thead>
+          <tbody>
+            {reviews.map((review) => (
+              <tr key={review.id} className="border-b border-cool last:border-0">
+                <td className="p-3 text-body">{review.created_at.slice(0, 10)}</td>
+                <td className="p-3 font-medium text-ink">{review.rating}★</td>
+                <td className="p-3">
+                  <Badge variant={review.classification === "good" ? "mint" : "destructive"}>
+                    {review.classification}
+                  </Badge>
+                </td>
+                <td className="p-3 text-body">{review.comment ?? "-"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {reviews.length === 0 && (
+          <p className="text-muted-foreground text-center py-8">Sin reviews todavia.</p>
+        )}
+      </div>
     </div>
   );
 }

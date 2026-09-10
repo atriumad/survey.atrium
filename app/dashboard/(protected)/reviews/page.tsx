@@ -37,7 +37,7 @@ export default async function ReviewsPage({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold">Reviews</h1>
+        <h1 className="text-3xl font-serif italic text-ink">Reviews</h1>
         {profile.role === "admin" && <LocationFilter locations={locations ?? []} />}
       </div>
       <ReviewsTable reviews={(reviews ?? []) as Review[]} />
