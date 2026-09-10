@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/get-profile";
 import { LocationsSection } from "./locations-section";
 import { KeywordsSection } from "./keywords-section";
+import { PageHeader } from "../page-header";
 
 export default async function ConfigPage() {
   const profile = await getProfile();
@@ -16,7 +17,10 @@ export default async function ConfigPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="text-3xl font-serif italic text-ink">Configuracion</h1>
+      <PageHeader
+        title="Configuracion"
+        description="Locales, codigos QR y palabras clave para clasificar reviews."
+      />
       <LocationsSection locations={locations ?? []} />
       <KeywordsSection keywords={keywords ?? []} />
     </div>
