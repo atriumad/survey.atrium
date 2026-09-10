@@ -18,7 +18,7 @@ export function Sidebar({ role }: { role: Role }) {
     role === "admin" ? [...NAV_ITEMS, { href: "/dashboard/config", label: "Config" }] : NAV_ITEMS;
 
   return (
-    <aside className="flex flex-row lg:flex-col w-full lg:w-56 lg:shrink-0 border-b lg:border-b-0 lg:border-r border-cool bg-off-white lg:min-h-screen">
+    <aside className="flex flex-row lg:flex-col w-full lg:w-56 lg:shrink-0 border-b lg:border-b-0 lg:border-r border-cool bg-off-white lg:sticky lg:top-0 lg:h-screen">
       <div className="hidden lg:block p-4">
         <p className="text-sm font-semibold text-ink">Atrium</p>
         <p className="text-xs text-body capitalize">{role}</p>

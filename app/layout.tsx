@@ -13,6 +13,7 @@ const instrumentSerif = Instrument_Serif({
   subsets: ["latin"],
   weight: "400",
   style: ["normal", "italic"],
+  preload: false,
 });
 
 const nothingYouCouldDo = Nothing_You_Could_Do({

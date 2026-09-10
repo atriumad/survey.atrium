@@ -37,7 +37,7 @@ export default async function ReviewsPage({
   const reviewsList = (reviews ?? []) as Review[];
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       <PageHeader
         title="Reviews"
         actions={

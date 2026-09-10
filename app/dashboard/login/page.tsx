@@ -16,7 +16,7 @@ export default async function LoginPage({
       <Card className="w-full max-w-sm">
         <CardContent className="pt-6 flex flex-col gap-6">
           <div className="flex flex-col gap-1 items-center">
-            <h1 className="text-2xl font-medium text-ink text-center">Iniciar sesion</h1>
+            <h1 className="text-2xl font-medium text-ink tracking-tight text-center">Iniciar sesion</h1>
             <p className="text-sm text-body">Atrium · Dashboard de reviews</p>
           </div>
           {error && (
