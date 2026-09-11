@@ -66,6 +66,7 @@
   --color-sage: #A8C89A;
   --color-periwinkle: #7E9BF0;
   --color-cool: #E4EEF0;
+  --color-line-inverse: rgba(243, 239, 228, 0.2);
 
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
