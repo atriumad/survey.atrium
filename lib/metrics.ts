@@ -50,3 +50,20 @@ export function describeAverageRating(averageRating: number, total: number): str
   if (averageRating >= 3) return "Average";
   return "Needs improvement";
 }
+
+export interface RatingTrend {
+  direction: "up" | "down" | "flat";
+  delta: number;
+}
+
+export function describeRatingTrend(
+  currentAverage: number,
+  previousAverage: number,
+  previousCount: number
+): RatingTrend | null {
+  if (previousCount === 0) return null;
+  const delta = Math.round((currentAverage - previousAverage) * 100) / 100;
+  if (delta >= 0.1) return { direction: "up", delta };
+  if (delta <= -0.1) return { direction: "down", delta };
+  return { direction: "flat", delta };
+}

@@ -99,3 +99,23 @@ describe("describeAverageRating", () => {
     expect(describeAverageRating(2.4, 10)).toBe("Needs improvement");
   });
 });
+
+import { describeRatingTrend } from "@/lib/metrics";
+
+describe("describeRatingTrend", () => {
+  it("returns 'up' when the current average is at least 0.1 higher", () => {
+    expect(describeRatingTrend(4.5, 4.2, 10)).toEqual({ direction: "up", delta: 0.3 });
+  });
+
+  it("returns 'down' when the current average is at least 0.1 lower", () => {
+    expect(describeRatingTrend(4.0, 4.5, 10)).toEqual({ direction: "down", delta: -0.5 });
+  });
+
+  it("returns 'flat' when the difference is smaller than 0.1", () => {
+    expect(describeRatingTrend(4.35, 4.3, 10)).toEqual({ direction: "flat", delta: 0.05 });
+  });
+
+  it("returns null when the previous period has no reviews", () => {
+    expect(describeRatingTrend(4.5, 0, 0)).toBeNull();
+  });
+});
