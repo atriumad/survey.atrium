@@ -31,7 +31,7 @@ export function KeywordsSection({ keywords }: { keywords: Keyword[] }) {
       </Card>
 
       {keywords.length === 0 ? (
-        <p className="text-sm text-body">You haven't added any keywords yet.</p>
+        <p className="text-sm text-body">You haven&apos;t added any keywords yet.</p>
       ) : (
         <div className="flex flex-wrap gap-2">
           {keywords.map((kw) => (

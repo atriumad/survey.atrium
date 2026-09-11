@@ -4,8 +4,18 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { reviewSubmitSchema } from "@/lib/validation";
-import { classifyReview } from "@/lib/classify";
-import { isRateLimited } from "@/lib/rate-limit";
+import {
+  buildRateLimitKey,
+  consumeRateLimit,
+  getRequestIp,
+  SUBMIT_REVIEW_POLICY,
+} from "@/lib/rate-limit";
+
+interface SubmitReviewResult {
+  review_id: string;
+  classification: string;
+  shared_to_google: boolean;
+}
 
 export async function submitReview(formData: FormData) {
   const parsed = reviewSubmitSchema.safeParse({
@@ -23,62 +33,41 @@ export async function submitReview(formData: FormData) {
   }
 
   const headersList = await headers();
-  const ip = headersList.get("x-forwarded-for") ?? "unknown";
-  if (isRateLimited(ip)) {
+  const ip = getRequestIp(headersList);
+  const supabase = await createClient();
+  const allowed = await consumeRateLimit(
+    supabase,
+    buildRateLimitKey(ip, "submit-review"),
+    SUBMIT_REVIEW_POLICY
+  );
+
+  if (!allowed) {
     throw new Error("Please wait a moment before submitting another review");
   }
 
-  const { locationSlug, email, rating, comment, sharedToGoogle: requestedShareToGoogle } =
-    parsed.data;
-  const supabase = await createClient();
+  const { locationSlug, email, rating, comment, sharedToGoogle } = parsed.data;
 
-  const { data: location, error: locationError } = await supabase
-    .from("locations")
-    .select("id, client_id")
-    .eq("slug", locationSlug)
-    .single();
-
-  if (locationError || !location) {
-    if (locationError) console.error("Location lookup failed", locationError);
-    throw new Error("Location not found");
-  }
-
-  const { data: keywordRows } = await supabase
-    .from("negative_keywords")
-    .select("keyword")
-    .eq("client_id", location.client_id);
-
-  const { classification, matchedKeywords } = classifyReview({
-    rating,
-    comment,
-    negativeKeywords: (keywordRows ?? []).map((row) => row.keyword),
+  const { data, error } = await supabase.rpc("submit_review", {
+    p_location_slug: locationSlug,
+    p_rating: rating,
+    p_comment: comment,
+    p_email: email,
+    p_requested_google: sharedToGoogle,
   });
 
-  const sharedToGoogle = requestedShareToGoogle && classification === "good";
-
-  const { error: insertError } = await supabase.from("reviews").insert({
-    client_id: location.client_id,
-    location_id: location.id,
-    rating,
-    comment: comment || null,
-    email,
-    classification,
-    matched_keywords: matchedKeywords.length > 0 ? matchedKeywords : null,
-    shared_to_google: sharedToGoogle,
-  });
-
-  if (insertError) {
-    console.error("Could not save review", insertError);
+  if (error) {
+    console.error("submit_review failed", error);
+    if (error.message.includes("LOCATION_NOT_FOUND")) {
+      throw new Error("Location not found");
+    }
     throw new Error("Could not save review");
   }
 
-  if (classification === "good") {
-    redirect(
-      `/r/${locationSlug}/gracias?c=${classification}&s=${
-        sharedToGoogle ? "1" : "0"
-      }&comment=${encodeURIComponent(comment)}`
-    );
+  const row = (data as SubmitReviewResult[] | null)?.[0];
+  if (!row?.review_id || !row.classification) {
+    console.error("submit_review returned no row", data);
+    throw new Error("Could not save review");
   }
 
-  redirect(`/r/${locationSlug}/gracias?c=${classification}`);
+  redirect(`/r/${locationSlug}/gracias?c=${row.classification}&r=${row.review_id}`);
 }

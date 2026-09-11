@@ -12,3 +12,28 @@ export const reviewSubmitSchema = z
     message: "Comment is required for ratings of 3 or below",
     path: ["comment"],
   });
+
+export const locationFormSchema = z.object({
+  name: z.string().trim().min(1).max(100),
+  slug: z
+    .string()
+    .trim()
+    .min(1)
+    .max(100)
+    .regex(/^[a-z0-9-]+$/i, "Slug can only contain letters, numbers, and dashes")
+    .transform((v) => v.toLowerCase()),
+  googleReviewUrl: z
+    .string()
+    .trim()
+    .max(500)
+    .optional()
+    .or(z.literal(""))
+    .transform((v) => (v && v.trim() ? v.trim() : null))
+    .refine((v) => v === null || /^https?:\/\//.test(v), {
+      message: "Must be a Google review link (https://...) or empty",
+    }),
+});
+
+export const keywordFormSchema = z.object({
+  keyword: z.string().trim().min(1).max(100),
+});

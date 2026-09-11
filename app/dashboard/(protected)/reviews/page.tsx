@@ -78,7 +78,7 @@ export default async function ReviewsPage({
         actions={
           <div className="flex items-center gap-2">
             {profile.role === "admin" && <LocationFilter locations={locations ?? []} />}
-            <ExportButton reviews={reviewsList} />
+            <ExportButton filters={{ location: effectiveLocation ?? null, classification: params.classification ?? null, from: params.from ?? null, to: params.to ?? null }} />
           </div>
         }
       />

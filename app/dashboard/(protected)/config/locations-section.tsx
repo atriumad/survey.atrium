@@ -7,9 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buildReviewUrl, generateQrDataUrl } from "@/lib/qr";
 import { createLocation, deleteLocation } from "./actions";
+import { GoogleLinkGuide } from "./google-link-guide";
 import type { Location } from "@/lib/types";
 
-export function LocationsSection({ locations }: { locations: Location[] }) {
+export function LocationsSection({ locations, baseUrl }: { locations: Location[]; baseUrl: string }) {
   return (
     <div className="flex flex-col gap-4">
       <h2 className="text-xs uppercase tracking-wide font-semibold text-body">Locations</h2>
@@ -28,8 +29,14 @@ export function LocationsSection({ locations }: { locations: Location[] }) {
               <Input id="location-slug" name="slug" placeholder="downtown" required className="w-40" />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="location-place-id">Google Place ID (optional)</Label>
-              <Input id="location-place-id" name="googlePlaceId" className="w-56" />
+              <Label htmlFor="location-review-url">Google review link (optional)</Label>
+              <Input
+                id="location-review-url"
+                name="googleReviewUrl"
+                placeholder="https://g.page/r/XXXX/review"
+                className="w-64"
+              />
+              <GoogleLinkGuide />
             </div>
             <Button type="submit">Add</Button>
           </form>
@@ -37,11 +44,11 @@ export function LocationsSection({ locations }: { locations: Location[] }) {
       </Card>
 
       {locations.length === 0 ? (
-        <p className="text-sm text-body">You haven't added any locations yet.</p>
+        <p className="text-sm text-body">You haven&apos;t added any locations yet.</p>
       ) : (
         <div className="flex flex-col gap-2">
           {locations.map((loc) => (
-            <LocationRow key={loc.id} location={loc} />
+            <LocationRow key={loc.id} location={loc} baseUrl={baseUrl} />
           ))}
         </div>
       )}
@@ -49,14 +56,13 @@ export function LocationsSection({ locations }: { locations: Location[] }) {
   );
 }
 
-function LocationRow({ location }: { location: Location }) {
+function LocationRow({ location, baseUrl }: { location: Location; baseUrl: string }) {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
     const url = buildReviewUrl(baseUrl, location.slug);
     generateQrDataUrl(url).then(setQrDataUrl);
-  }, [location.slug]);
+  }, [baseUrl, location.slug]);
 
   return (
     <Card size="sm">
@@ -65,6 +71,17 @@ function LocationRow({ location }: { location: Location }) {
         <div className="flex-1">
           <p className="font-medium text-ink">{location.name}</p>
           <p className="text-sm text-body">/r/{location.slug}</p>
+          {location.google_review_url ? (
+            <p className="mt-0.5 flex items-center gap-1.5 text-xs text-ink">
+              <span className="inline-block size-1.5 rounded-full bg-green-600" aria-hidden="true" />
+              Google review link configured
+            </p>
+          ) : (
+            <p className="mt-0.5 flex items-center gap-1.5 text-xs text-body">
+              <span className="inline-block size-1.5 rounded-full bg-yellow-500" aria-hidden="true" />
+              No Google review link yet
+            </p>
+          )}
         </div>
         {qrDataUrl && (
           <a href={qrDataUrl} download={`qr-${location.slug}.png`}>

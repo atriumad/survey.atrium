@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter_Tight, Instrument_Serif, Nothing_You_Could_Do } from "next/font/google";
+import { getSiteUrl } from "@/lib/site-url";
 import "./globals.css";
 
 const interTight = Inter_Tight({
@@ -23,6 +24,7 @@ const nothingYouCouldDo = Nothing_You_Could_Do({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(getSiteUrl()),
   title: "Atrium",
   description: "Review & survey platform",
 };

@@ -41,4 +41,77 @@ describe("reviewsToCsv", () => {
     const csv = reviewsToCsv([review]);
     expect(csv).toContain('"Buenisimo, todo ""perfecto"""');
   });
+
+  it("prefixes formula-injection comments with a single quote", () => {
+    const review: Review = {
+      id: "1",
+      client_id: "c1",
+      location_id: "l1",
+      rating: 1,
+      comment: "=SUM(A1:A2)",
+      email: null,
+      classification: "bad",
+      matched_keywords: null,
+      shared_to_google: false,
+      created_at: "2026-01-15T10:00:00.000Z",
+    };
+    const csv = reviewsToCsv([review]);
+    expect(csv).toContain("'=SUM(A1:A2)");
+  });
+
+  it.each([
+    ["+cmd|'|C:/Windows/System32/cmd.exe", "'+cmd|'|C:/Windows/System32/cmd.exe"],
+    ["@user", "'@user"],
+    ["-2+3+cmd", "'-2+3+cmd"],
+    ["\tmalicious", "'\tmalicious"],
+  ])("neutralizes leading %s in comments", (comment, expected) => {
+    const review: Review = {
+      id: "1",
+      client_id: "c1",
+      location_id: "l1",
+      rating: 1,
+      comment,
+      email: null,
+      classification: "bad",
+      matched_keywords: null,
+      shared_to_google: false,
+      created_at: "2026-01-15T10:00:00.000Z",
+    };
+    const csv = reviewsToCsv([review]);
+    expect(csv).toContain(expected);
+  });
+
+  it("neutralizes formula injection in keywords", () => {
+    const review: Review = {
+      id: "1",
+      client_id: "c1",
+      location_id: "l1",
+      rating: 2,
+      comment: "lento",
+      email: null,
+      classification: "bad",
+      matched_keywords: ["=2+2", "rapido"],
+      shared_to_google: false,
+      created_at: "2026-01-15T10:00:00.000Z",
+    };
+    const csv = reviewsToCsv([review]);
+    expect(csv).toContain("'=2+2;rapido");
+  });
+
+  it("leaves a plain comment without quotes when it contains no delimiters", () => {
+    const review: Review = {
+      id: "1",
+      client_id: "c1",
+      location_id: "l1",
+      rating: 5,
+      comment: "excelente",
+      email: null,
+      classification: "good",
+      matched_keywords: null,
+      shared_to_google: false,
+      created_at: "2026-01-15T10:00:00.000Z",
+    };
+    const csv = reviewsToCsv([review]);
+    expect(csv).toContain(",excelente,");
+  });
 });

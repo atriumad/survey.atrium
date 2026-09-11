@@ -3,9 +3,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
-export function ShareGoogle({ googlePlaceId, comment }: { googlePlaceId: string; comment: string }) {
+export function ShareGoogle({ reviewUrl, comment }: { reviewUrl: string; comment: string }) {
   const [copied, setCopied] = useState(false);
-  const reviewUrl = `https://search.google.com/local/writereview?placeid=${googlePlaceId}`;
 
   async function handleCopy() {
     await navigator.clipboard.writeText(comment);
@@ -23,7 +22,10 @@ export function ShareGoogle({ googlePlaceId, comment }: { googlePlaceId: string;
             {copied ? "Copied!" : "Copy my review"}
           </Button>
         )}
-        <Button render={<a href={reviewUrl} target="_blank" rel="noopener noreferrer" />}>
+        <Button
+          nativeButton={false}
+          render={<a href={reviewUrl} target="_blank" rel="noopener noreferrer" />}
+        >
           Open Google
         </Button>
       </div>

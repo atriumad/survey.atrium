@@ -13,6 +13,10 @@ import { StarRating } from "@/components/ui/star-rating";
 import { cn } from "cn";
 import type { Review, ReviewWithLocation } from "@/lib/types";
 
+function daysAgoIso(days: number): string {
+  return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+}
+
 export default async function DashboardHomePage({
   searchParams,
 }: {
@@ -45,8 +49,8 @@ export default async function DashboardHomePage({
   const conversionRate = calculateConversionRate(summary.total, scansTotal ?? 0);
   const ratingTier = describeAverageRating(summary.averageRating, summary.total);
 
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-  const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
+  const thirtyDaysAgo = daysAgoIso(30);
+  const sixtyDaysAgo = daysAgoIso(60);
 
   let currentPeriodQuery = supabase
     .from("reviews")
@@ -82,7 +86,7 @@ export default async function DashboardHomePage({
     previousPeriodReviews?.length ?? 0
   );
 
-  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const twentyFourHoursAgo = daysAgoIso(1);
   let recentQuery = supabase
     .from("reviews")
     .select("*, location:locations(name)")

@@ -1,26 +1,32 @@
 "use client";
 
+import { useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StarRating } from "@/components/ui/star-rating";
-import { reviewsToCsv } from "@/lib/csv";
-import type { Review, ReviewWithLocation } from "@/lib/types";
+import { exportReviewsCsv, type ReviewExportFilters } from "./actions";
+import type { ReviewWithLocation } from "@/lib/types";
 
-export function ExportButton({ reviews }: { reviews: Review[] }) {
+export function ExportButton({ filters }: { filters: ReviewExportFilters }) {
+  const [pending, startTransition] = useTransition();
+
   function handleExport() {
-    const csv = reviewsToCsv(reviews);
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `reviews-${new Date().toISOString().slice(0, 10)}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
+    startTransition(async () => {
+      const { csv, filename } = await exportReviewsCsv(filters);
+      if (!csv) return;
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(url);
+    });
   }
 
   return (
-    <Button variant="outline" onClick={handleExport} disabled={reviews.length === 0}>
-      Export CSV
+    <Button variant="outline" onClick={handleExport} disabled={pending}>
+      {pending ? "Exporting…" : "Export CSV"}
     </Button>
   );
 }

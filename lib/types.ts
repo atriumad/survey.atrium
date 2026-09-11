@@ -24,6 +24,6 @@ export interface Location {
   client_id: string;
   name: string;
   slug: string;
-  google_place_id: string | null;
+  google_review_url: string | null;
   created_at: string;
 }

@@ -11,21 +11,25 @@ export default async function ReviewPage({
   const { locationSlug } = await params;
   const supabase = await createClient();
 
-  const { data: location } = await supabase
+  const { data: location, error } = await supabase
     .from("locations")
     .select("id, name, client_id")
     .eq("slug", locationSlug)
     .single();
 
-  if (!location) {
+  if (error || !location) {
+    if (error && error.code !== "PGRST116") {
+      console.error("Location lookup failed", error);
+      throw error;
+    }
     notFound();
   }
 
   after(async () => {
-    const { error } = await supabase
-      .from("qr_scans")
-      .insert({ client_id: location.client_id, location_id: location.id });
-    if (error) console.error("qr_scan insert failed", error);
+    const { error: qrError } = await supabase.rpc("record_qr_scan", {
+      p_location_id: location.id,
+    });
+    if (qrError) console.error("qr_scan write failed", qrError);
   });
 
   return (

@@ -6,9 +6,9 @@ import { login } from "./actions";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; email?: string }>;
 }) {
-  const { error } = await searchParams;
+  const { error, email } = await searchParams;
 
   return (
     <main className="min-h-screen bg-cream flex items-center justify-center p-6">
@@ -35,7 +35,12 @@ export default async function LoginPage({
               <h2 className="text-2xl font-medium text-ink tracking-tight">Sign in</h2>
               <p className="text-sm text-body">Atrium · Reviews dashboard</p>
             </div>
-            {error && (
+            {error === "2" && (
+              <p className="text-destructive text-sm text-center bg-red-soft rounded-[18px] py-2 px-3">
+                Too many attempts. Try again in a minute.
+              </p>
+            )}
+            {error === "1" && (
               <p className="text-destructive text-sm text-center bg-red-soft rounded-[18px] py-2 px-3">
                 Incorrect email or password
               </p>
@@ -43,7 +48,7 @@ export default async function LoginPage({
             <form action={login} className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
                 <Label htmlFor="email" className="text-ink">Email</Label>
-                <Input id="email" name="email" type="email" required className="h-10 rounded-[18px]" />
+                <Input id="email" name="email" type="email" required defaultValue={email ?? ""} className="h-10 rounded-[18px]" />
               </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor="password" className="text-ink">Password</Label>
