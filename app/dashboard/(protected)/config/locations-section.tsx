@@ -46,7 +46,7 @@ export function LocationsSection({ locations, baseUrl }: { locations: Location[]
       {locations.length === 0 ? (
         <p className="text-sm text-body">You haven&apos;t added any locations yet.</p>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
           {locations.map((loc) => (
             <LocationRow key={loc.id} location={loc} baseUrl={baseUrl} />
           ))}
@@ -65,19 +65,19 @@ function LocationRow({ location, baseUrl }: { location: Location; baseUrl: strin
   }, [baseUrl, location.slug]);
 
   return (
-    <Card size="sm">
-      <CardContent className="flex items-center gap-4">
+    <Card size="sm" className="p-4">
+      <CardContent className="p-0 flex items-center gap-4">
         {qrDataUrl && <img src={qrDataUrl} alt={`QR ${location.name}`} className="w-16 h-16" />}
-        <div className="flex-1">
+        <div className="flex-1 flex flex-col gap-1">
           <p className="font-medium text-ink">{location.name}</p>
           <p className="text-sm text-body">/r/{location.slug}</p>
           {location.google_review_url ? (
-            <p className="mt-0.5 flex items-center gap-1.5 text-xs text-ink">
+            <p className="flex items-center gap-1.5 text-xs text-ink">
               <span className="inline-block size-1.5 rounded-full bg-green-600" aria-hidden="true" />
               Google review link configured
             </p>
           ) : (
-            <p className="mt-0.5 flex items-center gap-1.5 text-xs text-body">
+            <p className="flex items-center gap-1.5 text-xs text-body">
               <span className="inline-block size-1.5 rounded-full bg-yellow-500" aria-hidden="true" />
               No Google review link yet
             </p>

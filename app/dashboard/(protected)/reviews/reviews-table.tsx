@@ -47,35 +47,35 @@ export function ReviewsTable({
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-cool text-left text-xs uppercase tracking-wide text-body">
-            <th className="p-3 font-medium">Email</th>
-            <th className="p-3 font-medium">Rating</th>
-            <th className="p-3 font-medium">Classification</th>
-            <th className="p-3 font-medium">Comment</th>
-            <th className="p-3 font-medium">Date</th>
-            <th className="p-3 font-medium">Location</th>
+            <th className="px-4 py-3.5 font-medium">Email</th>
+            <th className="px-4 py-3.5 font-medium">Rating</th>
+            <th className="px-4 py-3.5 font-medium">Classification</th>
+            <th className="px-4 py-3.5 font-medium">Comment</th>
+            <th className="px-4 py-3.5 font-medium">Date</th>
+            <th className="px-4 py-3.5 font-medium">Location</th>
           </tr>
         </thead>
         <tbody>
           {reviews.map((review) => (
             <tr key={review.id} className="border-b border-cool last:border-0">
-              <td className="p-3 text-body">{review.email ?? "—"}</td>
-              <td className="p-3">
+              <td className="px-4 py-3.5 text-body">{review.email ?? "—"}</td>
+              <td className="px-4 py-3.5">
                 <StarRating rating={review.rating} size="sm" />
               </td>
-              <td className="p-3">
+              <td className="px-4 py-3.5">
                 <Badge variant={review.classification === "good" ? "mint" : "destructive"}>
                   {review.classification}
                 </Badge>
               </td>
-              <td className="p-3 text-body">{review.comment ?? "—"}</td>
-              <td className="p-3 text-body">{review.created_at.slice(0, 10)}</td>
-              <td className="p-3 text-body">{review.location?.name ?? "—"}</td>
+              <td className="px-4 py-3.5 text-body">{review.comment ?? "—"}</td>
+              <td className="px-4 py-3.5 text-body">{review.created_at.slice(0, 10)}</td>
+              <td className="px-4 py-3.5 text-body">{review.location?.name ?? "—"}</td>
             </tr>
           ))}
           {Array.from({ length: fillerCount }).map((_, i) => (
             <tr key={`filler-${i}`} className="border-b border-cool last:border-0">
               {Array.from({ length: COLUMN_COUNT }).map((__, j) => (
-                <td key={j} className="p-3 text-body/30">—</td>
+                <td key={j} className="px-4 py-3.5 text-body/30">—</td>
               ))}
             </tr>
           ))}
