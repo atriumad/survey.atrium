@@ -74,3 +74,28 @@ describe("calculateConversionRate", () => {
     expect(calculateConversionRate(40, 1)).toBe(100);
   });
 });
+
+import { describeAverageRating } from "@/lib/metrics";
+
+describe("describeAverageRating", () => {
+  it("returns 'Sin datos aun' when there are no reviews", () => {
+    expect(describeAverageRating(0, 0)).toBe("Sin datos aun");
+  });
+
+  it("returns 'Excelente' at 4.5 and above", () => {
+    expect(describeAverageRating(4.5, 10)).toBe("Excelente");
+    expect(describeAverageRating(5, 10)).toBe("Excelente");
+  });
+
+  it("returns 'Muy bien' between 4.0 and 4.49", () => {
+    expect(describeAverageRating(4.2, 10)).toBe("Muy bien");
+  });
+
+  it("returns 'Regular' between 3.0 and 3.99", () => {
+    expect(describeAverageRating(3.1, 10)).toBe("Regular");
+  });
+
+  it("returns 'A mejorar' below 3.0", () => {
+    expect(describeAverageRating(2.4, 10)).toBe("A mejorar");
+  });
+});

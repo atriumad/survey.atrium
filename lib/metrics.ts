@@ -42,3 +42,11 @@ export function calculateConversionRate(reviewsTotal: number, scansTotal: number
   if (scansTotal === 0) return null;
   return Math.min(100, Math.round((reviewsTotal / scansTotal) * 100));
 }
+
+export function describeAverageRating(averageRating: number, total: number): string {
+  if (total === 0) return "Sin datos aun";
+  if (averageRating >= 4.5) return "Excelente";
+  if (averageRating >= 4) return "Muy bien";
+  if (averageRating >= 3) return "Regular";
+  return "A mejorar";
+}
