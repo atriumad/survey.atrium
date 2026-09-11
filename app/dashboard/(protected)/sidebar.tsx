@@ -8,7 +8,7 @@ import { logout } from "./actions";
 import type { Role } from "@/lib/types";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "Metricas" },
+  { href: "/dashboard", label: "Overview" },
   { href: "/dashboard/reviews", label: "Reviews" },
 ];
 

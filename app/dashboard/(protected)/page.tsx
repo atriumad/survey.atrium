@@ -4,6 +4,7 @@ import { summarizeReviews, calculateConversionRate } from "@/lib/metrics";
 import { LocationFilter } from "./location-filter";
 import { PageHeader } from "./page-header";
 import { Card, CardContent } from "@/components/ui/card";
+import { ReviewsTable } from "./reviews/reviews-table";
 import type { Review } from "@/lib/types";
 
 export default async function DashboardHomePage({
@@ -37,24 +38,43 @@ export default async function DashboardHomePage({
   const { count: scansTotal } = await scansQuery;
   const conversionRate = calculateConversionRate(summary.total, scansTotal ?? 0);
 
+  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  let recentQuery = supabase
+    .from("reviews")
+    .select("*")
+    .eq("client_id", profile.clientId)
+    .gte("created_at", twentyFourHoursAgo)
+    .order("created_at", { ascending: false });
+  if (effectiveLocation) recentQuery = recentQuery.eq("location_id", effectiveLocation);
+  const { data: recentReviews } = await recentQuery;
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Metricas"
+        title="Overview"
         actions={profile.role === "admin" && <LocationFilter locations={locations ?? []} />}
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <MetricCard label="Total reviews" value={summary.total} />
-        <MetricCard label="Rating promedio" value={summary.averageRating.toFixed(1)} />
-        <MetricCard label="% Buenas" value={`${summary.goodPercent}%`} />
-        <MetricCard label="% Compartidas a Google" value={`${summary.sharedPercent}%`} />
-        <MetricCard label="Escaneos QR" value={scansTotal ?? 0} />
-        <MetricCard label="Conversion" value={conversionRate === null ? "—" : `${conversionRate}%`} />
+      <div className="flex flex-col gap-3">
+        <h2 className="text-xs uppercase tracking-wide font-semibold text-body">Actividad</h2>
+        <div className="grid grid-cols-3 gap-4">
+          <MetricCard label="Total reviews" value={summary.total} />
+          <MetricCard label="Escaneos QR" value={scansTotal ?? 0} />
+          <MetricCard label="Conversion" value={conversionRate === null ? "—" : `${conversionRate}%`} />
+        </div>
       </div>
 
-      <div>
-        <h2 className="text-xl font-medium text-ink mb-3">Distribucion de estrellas</h2>
+      <div className="flex flex-col gap-3">
+        <h2 className="text-xs uppercase tracking-wide font-semibold text-body">Calidad</h2>
+        <div className="grid grid-cols-3 gap-4">
+          <MetricCard label="Rating promedio" value={summary.averageRating.toFixed(1)} />
+          <MetricCard label="% Buenas" value={`${summary.goodPercent}%`} />
+          <MetricCard label="% Compartidas a Google" value={`${summary.sharedPercent}%`} />
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <h2 className="text-xs uppercase tracking-wide font-semibold text-body">Distribucion de estrellas</h2>
         <div className="flex gap-3 items-end h-40">
           {([1, 2, 3, 4, 5] as const).map((star) => (
             <div key={star} className="flex flex-col items-center gap-2 flex-1">
@@ -70,6 +90,11 @@ export default async function DashboardHomePage({
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <h2 className="text-xs uppercase tracking-wide font-semibold text-body">Ultimas 24 horas</h2>
+        <ReviewsTable reviews={(recentReviews ?? []) as Review[]} />
       </div>
     </div>
   );
