@@ -8,8 +8,12 @@ export function LocationFilter({ locations }: { locations: { id: string; name: s
   const searchParams = useSearchParams();
   const current = searchParams.get("location") ?? "all";
 
+  const items: Record<string, string> = { all: "All locations" };
+  for (const loc of locations) items[loc.id] = loc.name;
+
   return (
     <Select
+      items={items}
       value={current}
       onValueChange={(value) => {
         const params = new URLSearchParams(searchParams);
@@ -22,7 +26,7 @@ export function LocationFilter({ locations }: { locations: { id: string; name: s
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="all">Todos los locales</SelectItem>
+        <SelectItem value="all">All locations</SelectItem>
         {locations.map((loc) => (
           <SelectItem key={loc.id} value={loc.id}>
             {loc.name}
