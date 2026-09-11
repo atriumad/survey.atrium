@@ -15,6 +15,10 @@ export interface Review {
   created_at: string;
 }
 
+export interface ReviewWithLocation extends Review {
+  location: { name: string } | null;
+}
+
 export interface Location {
   id: string;
   client_id: string;

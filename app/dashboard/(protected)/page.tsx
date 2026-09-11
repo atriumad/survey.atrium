@@ -1,10 +1,17 @@
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/get-profile";
-import { summarizeReviews, calculateConversionRate, describeAverageRating } from "@/lib/metrics";
+import {
+  summarizeReviews,
+  calculateConversionRate,
+  describeAverageRating,
+  describeRatingTrend,
+} from "@/lib/metrics";
 import { LocationFilter } from "./location-filter";
 import { PageHeader } from "./page-header";
 import { ReviewsTable } from "./reviews/reviews-table";
-import type { Review } from "@/lib/types";
+import { StarRating } from "@/components/ui/star-rating";
+import { cn } from "cn";
+import type { Review, ReviewWithLocation } from "@/lib/types";
 
 export default async function DashboardHomePage({
   searchParams,
@@ -38,10 +45,47 @@ export default async function DashboardHomePage({
   const conversionRate = calculateConversionRate(summary.total, scansTotal ?? 0);
   const ratingTier = describeAverageRating(summary.averageRating, summary.total);
 
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
+
+  let currentPeriodQuery = supabase
+    .from("reviews")
+    .select("rating")
+    .eq("client_id", profile.clientId)
+    .gte("created_at", thirtyDaysAgo);
+  if (effectiveLocation) currentPeriodQuery = currentPeriodQuery.eq("location_id", effectiveLocation);
+
+  let previousPeriodQuery = supabase
+    .from("reviews")
+    .select("rating")
+    .eq("client_id", profile.clientId)
+    .gte("created_at", sixtyDaysAgo)
+    .lt("created_at", thirtyDaysAgo);
+  if (effectiveLocation) previousPeriodQuery = previousPeriodQuery.eq("location_id", effectiveLocation);
+
+  const [{ data: currentPeriodReviews }, { data: previousPeriodReviews }] = await Promise.all([
+    currentPeriodQuery,
+    previousPeriodQuery,
+  ]);
+
+  const currentPeriodAvg =
+    currentPeriodReviews && currentPeriodReviews.length > 0
+      ? currentPeriodReviews.reduce((sum, r) => sum + r.rating, 0) / currentPeriodReviews.length
+      : 0;
+  const previousPeriodAvg =
+    previousPeriodReviews && previousPeriodReviews.length > 0
+      ? previousPeriodReviews.reduce((sum, r) => sum + r.rating, 0) / previousPeriodReviews.length
+      : 0;
+  const trend = describeRatingTrend(
+    currentPeriodAvg,
+    previousPeriodAvg,
+    previousPeriodReviews?.length ?? 0
+  );
+
   const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   let recentQuery = supabase
     .from("reviews")
-    .select("*")
+    .select("*, location:locations(name)")
     .eq("client_id", profile.clientId)
     .gte("created_at", twentyFourHoursAgo)
     .order("created_at", { ascending: false });
@@ -72,16 +116,37 @@ export default async function DashboardHomePage({
           }}
         />
         <div className="relative flex flex-col gap-6">
-          <div>
+          <div className="flex flex-col gap-3">
             <p className="text-xs uppercase tracking-[0.28em] text-lime font-semibold">
               Average rating
             </p>
-            <p className="mt-2 flex flex-wrap items-baseline gap-3 text-6xl sm:text-7xl font-normal tracking-tight text-cream">
+            <p className="flex flex-wrap items-baseline gap-3 text-6xl sm:text-7xl font-normal tracking-tight text-cream">
               {summary.total > 0 ? summary.averageRating.toFixed(1) : "—"}
               <em className="font-serif italic text-lime text-3xl sm:text-4xl not-italic:font-serif">
                 {ratingTier}
               </em>
             </p>
+            <div className="flex items-center gap-3">
+              {summary.total > 0 && (
+                <StarRating rating={summary.averageRating} size="lg" mutedClassName="text-cream/20" />
+              )}
+              {trend && (
+                <span
+                  className={cn(
+                    "text-sm font-medium",
+                    trend.direction === "up" && "text-lime",
+                    trend.direction === "down" && "text-amber",
+                    trend.direction === "flat" && "text-cream/60"
+                  )}
+                >
+                  {trend.direction === "up" && "▲"}
+                  {trend.direction === "down" && "▼"}
+                  {trend.direction === "flat" && "→"}{" "}
+                  {trend.delta > 0 ? "+" : ""}
+                  {trend.delta.toFixed(1)} vs prior 30 days
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-x-8 gap-y-4 border-t border-line-inverse pt-6">
@@ -121,7 +186,7 @@ export default async function DashboardHomePage({
 
       <div className="flex flex-col gap-3">
         <h2 className="text-xs uppercase tracking-wide font-semibold text-body">Last 24 hours</h2>
-        <ReviewsTable reviews={(recentReviews ?? []) as Review[]} />
+        <ReviewsTable reviews={(recentReviews ?? []) as ReviewWithLocation[]} />
       </div>
     </div>
   );

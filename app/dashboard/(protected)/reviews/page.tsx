@@ -3,7 +3,7 @@ import { getProfile } from "@/lib/get-profile";
 import { ExportButton, ReviewsTable } from "./reviews-table";
 import { LocationFilter } from "../location-filter";
 import { PageHeader } from "../page-header";
-import type { Review } from "@/lib/types";
+import type { ReviewWithLocation } from "@/lib/types";
 
 export default async function ReviewsPage({
   searchParams,
@@ -23,7 +23,7 @@ export default async function ReviewsPage({
 
   let query = supabase
     .from("reviews")
-    .select("*")
+    .select("*, location:locations(name)")
     .eq("client_id", profile.clientId)
     .order("created_at", { ascending: false });
 
@@ -34,7 +34,7 @@ export default async function ReviewsPage({
   if (params.to) query = query.lte("created_at", params.to);
 
   const { data: reviews } = await query;
-  const reviewsList = (reviews ?? []) as Review[];
+  const reviewsList = (reviews ?? []) as ReviewWithLocation[];
 
   return (
     <div className="flex flex-col gap-6">
