@@ -50,9 +50,9 @@ export default async function DashboardHomePage({
 
   const secondaryStats: { label: string; value: string | number }[] = [
     { label: "Total reviews", value: summary.total },
-    { label: "% Buenas", value: `${summary.goodPercent}%` },
-    { label: "% Compartidas a Google", value: `${summary.sharedPercent}%` },
-    { label: "Escaneos QR", value: scansTotal ?? 0 },
+    { label: "% Good", value: `${summary.goodPercent}%` },
+    { label: "% Shared to Google", value: `${summary.sharedPercent}%` },
+    { label: "QR Scans", value: scansTotal ?? 0 },
     { label: "Conversion", value: conversionRate === null ? "—" : `${conversionRate}%` },
   ];
 
@@ -74,7 +74,7 @@ export default async function DashboardHomePage({
         <div className="relative flex flex-col gap-6">
           <div>
             <p className="text-xs uppercase tracking-[0.28em] text-lime font-semibold">
-              Rating promedio
+              Average rating
             </p>
             <p className="mt-2 flex flex-wrap items-baseline gap-3 text-6xl sm:text-7xl font-normal tracking-tight text-cream">
               {summary.total > 0 ? summary.averageRating.toFixed(1) : "—"}
@@ -96,7 +96,7 @@ export default async function DashboardHomePage({
       </div>
 
       <div className="flex flex-col gap-3">
-        <h2 className="text-xs uppercase tracking-wide font-semibold text-body">Distribucion de estrellas</h2>
+        <h2 className="text-xs uppercase tracking-wide font-semibold text-body">Star distribution</h2>
         <div className="rounded-[26px] bg-white p-5 shadow-card flex flex-col gap-3">
           {([5, 4, 3, 2, 1] as const).map((star) => {
             const count = summary.starDistribution[star];
@@ -120,7 +120,7 @@ export default async function DashboardHomePage({
       </div>
 
       <div className="flex flex-col gap-3">
-        <h2 className="text-xs uppercase tracking-wide font-semibold text-body">Ultimas 24 horas</h2>
+        <h2 className="text-xs uppercase tracking-wide font-semibold text-body">Last 24 hours</h2>
         <ReviewsTable reviews={(recentReviews ?? []) as Review[]} />
       </div>
     </div>

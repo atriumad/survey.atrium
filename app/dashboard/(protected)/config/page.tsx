@@ -18,8 +18,8 @@ export default async function ConfigPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Configuracion"
-        description="Locales, codigos QR y palabras clave para clasificar reviews."
+        title="Settings"
+        description="Locations, QR codes, and keywords used to classify reviews."
       />
       <LocationsSection locations={locations ?? []} />
       <KeywordsSection keywords={keywords ?? []} />

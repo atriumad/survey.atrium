@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "cn";
 import { submitReview } from "./actions";
 
-const STEPS = ["Correo", "Tu opinión", "Google"];
+const STEPS = ["Email", "Your feedback", "Google"];
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function ReviewForm({ locationSlug }: { locationSlug: string }) {
@@ -34,11 +34,11 @@ export function ReviewForm({ locationSlug }: { locationSlug: string }) {
   function handleEmailNext() {
     const value = email.trim().toLowerCase();
     if (!value) {
-      setEmailError("Ingresá tu correo electrónico.");
+      setEmailError("Enter your email address.");
       return;
     }
     if (!EMAIL_RE.test(value)) {
-      setEmailError("Ingresá un correo electrónico válido.");
+      setEmailError("Enter a valid email address.");
       return;
     }
     setEmailError(null);
@@ -47,7 +47,7 @@ export function ReviewForm({ locationSlug }: { locationSlug: string }) {
 
   function handleOpinionNext() {
     if (rating > 0 && rating <= 3 && comment.trim().length === 0) {
-      setCommentError("Contanos qué pasó para poder mejorar.");
+      setCommentError("Tell us what happened so we can improve.");
       return;
     }
     setCommentError(null);
@@ -71,7 +71,7 @@ export function ReviewForm({ locationSlug }: { locationSlug: string }) {
       await submitReview(formData);
     } catch (err) {
       unstable_rethrow(err);
-      setSubmitError(err instanceof Error ? err.message : "No pudimos guardar tu review.");
+      setSubmitError(err instanceof Error ? err.message : "We couldn't save your review.");
     } finally {
       setPending(false);
     }
@@ -83,7 +83,7 @@ export function ReviewForm({ locationSlug }: { locationSlug: string }) {
       noValidate
       className="flex flex-col gap-5 rounded-[26px] bg-white p-6 shadow-card"
     >
-      <div className="flex items-center justify-center gap-1" aria-label="Progreso">
+      <div className="flex items-center justify-center gap-1" aria-label="Progress">
         {STEPS.slice(0, stepCount).map((label, i) => (
           <div key={label} className="flex items-center gap-1">
             {i > 0 && (
@@ -108,14 +108,14 @@ export function ReviewForm({ locationSlug }: { locationSlug: string }) {
       {step === 0 && (
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <Label htmlFor="email">Correo electrónico</Label>
+            <Label htmlFor="email">Email address</Label>
             <Input
               id="email"
               name="email"
               type="email"
               autoComplete="email"
               inputMode="email"
-              placeholder="tucorreo@ejemplo.com"
+              placeholder="you@example.com"
               className="h-11"
               value={email}
               onChange={(e) => {
@@ -127,19 +127,19 @@ export function ReviewForm({ locationSlug }: { locationSlug: string }) {
             {emailError && <p className="text-sm text-destructive">{emailError}</p>}
           </div>
           <Button type="submit" size="lg" className="h-11 rounded-[18px]">
-            Continuar
+            Continue
           </Button>
         </div>
       )}
 
       {step === 1 && (
         <div className="flex flex-col gap-5">
-          <div className="flex gap-2 justify-center" role="radiogroup" aria-label="Calificación">
+          <div className="flex gap-2 justify-center" role="radiogroup" aria-label="Rating">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
                 key={star}
                 type="button"
-                aria-label={`${star} estrellas`}
+                aria-label={`${star} stars`}
                 aria-pressed={rating === star}
                 onClick={() => setRating(star)}
                 className={cn(
@@ -154,15 +154,15 @@ export function ReviewForm({ locationSlug }: { locationSlug: string }) {
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="comment">
-              {commentRequired(rating) ? "Comentario (requerido)" : "Comentario (opcional)"}
+              {commentRequired(rating) ? "Comment (required)" : "Comment (optional)"}
             </Label>
             <Textarea
               id="comment"
               name="comment"
               placeholder={
                 commentRequired(rating)
-                  ? "Contanos qué pasó para poder mejorar"
-                  : "Contanos tu experiencia"
+                  ? "Tell us what happened so we can improve"
+                  : "Tell us about your experience"
               }
               className="min-h-28"
               value={comment}
@@ -183,7 +183,7 @@ export function ReviewForm({ locationSlug }: { locationSlug: string }) {
               className="h-11 rounded-[18px]"
               onClick={() => setStep(0)}
             >
-              Atrás
+              Back
             </Button>
             <Button
               type="submit"
@@ -191,7 +191,7 @@ export function ReviewForm({ locationSlug }: { locationSlug: string }) {
               className="h-11 flex-1 rounded-[18px]"
               disabled={rating === 0 || pending}
             >
-              {qualifiesForShare ? "Continuar" : pending ? "Enviando..." : "Enviar"}
+              {qualifiesForShare ? "Continue" : pending ? "Sending..." : "Send"}
             </Button>
           </div>
         </div>
@@ -200,7 +200,7 @@ export function ReviewForm({ locationSlug }: { locationSlug: string }) {
       {step === 2 && (
         <div className="flex flex-col gap-4">
           <h2 className="text-lg font-semibold text-ink text-center">
-            ¿Querés compartir tu opinión en Google?
+            Want to share your review on Google?
           </h2>
           <div className="flex flex-col gap-3">
             <Button
@@ -211,7 +211,7 @@ export function ReviewForm({ locationSlug }: { locationSlug: string }) {
               disabled={pending}
               onClick={() => void submit(false)}
             >
-              No, gracias
+              No, thanks
             </Button>
             <Button
               type="button"
@@ -220,7 +220,7 @@ export function ReviewForm({ locationSlug }: { locationSlug: string }) {
               disabled={pending}
               onClick={() => void submit(true)}
             >
-              {pending ? "Enviando..." : "Sí, compartir"}
+              {pending ? "Sending..." : "Yes, share"}
             </Button>
           </div>
           <button
@@ -228,7 +228,7 @@ export function ReviewForm({ locationSlug }: { locationSlug: string }) {
             className="text-sm text-body underline underline-offset-2 self-center"
             onClick={() => setStep(1)}
           >
-            Atrás
+            Back
           </button>
         </div>
       )}

@@ -12,32 +12,32 @@ import type { Location } from "@/lib/types";
 export function LocationsSection({ locations }: { locations: Location[] }) {
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-xs uppercase tracking-wide font-semibold text-body">Locales</h2>
+      <h2 className="text-xs uppercase tracking-wide font-semibold text-body">Locations</h2>
       <Card>
         <CardHeader>
-          <CardTitle>Agregar local</CardTitle>
+          <CardTitle>Add location</CardTitle>
         </CardHeader>
         <CardContent>
           <form action={createLocation} className="flex gap-3 flex-wrap items-end">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="location-name">Nombre</Label>
-              <Input id="location-name" name="name" placeholder="Sucursal Centro" required className="w-40" />
+              <Label htmlFor="location-name">Name</Label>
+              <Input id="location-name" name="name" placeholder="Downtown Branch" required className="w-40" />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="location-slug">Slug</Label>
-              <Input id="location-slug" name="slug" placeholder="centro" required className="w-40" />
+              <Input id="location-slug" name="slug" placeholder="downtown" required className="w-40" />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="location-place-id">Google Place ID (opcional)</Label>
+              <Label htmlFor="location-place-id">Google Place ID (optional)</Label>
               <Input id="location-place-id" name="googlePlaceId" className="w-56" />
             </div>
-            <Button type="submit">Agregar</Button>
+            <Button type="submit">Add</Button>
           </form>
         </CardContent>
       </Card>
 
       {locations.length === 0 ? (
-        <p className="text-sm text-body">Todavia no agregaste ningun local.</p>
+        <p className="text-sm text-body">You haven't added any locations yet.</p>
       ) : (
         <div className="flex flex-col gap-2">
           {locations.map((loc) => (
@@ -68,11 +68,11 @@ function LocationRow({ location }: { location: Location }) {
         </div>
         {qrDataUrl && (
           <a href={qrDataUrl} download={`qr-${location.slug}.png`}>
-            <Button variant="outline" size="sm">Descargar QR</Button>
+            <Button variant="outline" size="sm">Download QR</Button>
           </a>
         )}
         <Button variant="ghost" size="sm" onClick={() => deleteLocation(location.id)}>
-          Eliminar
+          Delete
         </Button>
       </CardContent>
     </Card>

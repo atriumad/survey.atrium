@@ -15,16 +15,16 @@ export function ShareGoogle({ googlePlaceId, comment }: { googlePlaceId: string;
   return (
     <div className="flex flex-col gap-3 items-center">
       <p className="text-center text-muted-foreground">
-        Te gustaria compartir tu opinion en Google?
+        Want to share your review on Google?
       </p>
       <div className="flex gap-2">
         {comment && (
           <Button variant="outline" onClick={handleCopy}>
-            {copied ? "Copiado!" : "Copiar mi review"}
+            {copied ? "Copied!" : "Copy my review"}
           </Button>
         )}
         <Button render={<a href={reviewUrl} target="_blank" rel="noopener noreferrer" />}>
-          Abrir Google
+          Open Google
         </Button>
       </div>
     </div>

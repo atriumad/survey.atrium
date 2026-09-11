@@ -5,7 +5,7 @@ import type { Review } from "@/lib/types";
 describe("reviewsToCsv", () => {
   it("returns header only for empty input", () => {
     const csv = reviewsToCsv([]);
-    expect(csv).toBe("fecha,rating,clasificacion,comentario,keywords\n");
+    expect(csv).toBe("date,rating,classification,comment,keywords\n");
   });
 
   it("formats a row with a comment and matched keywords", () => {
@@ -22,7 +22,7 @@ describe("reviewsToCsv", () => {
       created_at: "2026-01-15T10:00:00.000Z",
     };
     const csv = reviewsToCsv([review]);
-    expect(csv).toBe('fecha,rating,clasificacion,comentario,keywords\n2026-01-15,2,bad,"muy lento",lento\n');
+    expect(csv).toBe('date,rating,classification,comment,keywords\n2026-01-15,2,bad,"muy lento",lento\n');
   });
 
   it("escapes commas and quotes inside comments", () => {

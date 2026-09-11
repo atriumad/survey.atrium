@@ -31,7 +31,7 @@ export default async function ReviewPage({
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-6 gap-6 bg-cream">
       <h1 className="text-2xl font-medium text-ink tracking-tight text-center">{location.name}</h1>
-      <p className="text-body text-center text-lg">Cual fue tu experiencia hoy?</p>
+      <p className="text-body text-center text-lg">How was your experience today?</p>
       <div className="w-full max-w-sm">
         <ReviewForm locationSlug={locationSlug} />
       </div>

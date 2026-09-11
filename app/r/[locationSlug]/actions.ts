@@ -25,7 +25,7 @@ export async function submitReview(formData: FormData) {
   const headersList = await headers();
   const ip = headersList.get("x-forwarded-for") ?? "unknown";
   if (isRateLimited(ip)) {
-    throw new Error("Espera un momento antes de enviar otra review");
+    throw new Error("Please wait a moment before submitting another review");
   }
 
   const { locationSlug, email, rating, comment, sharedToGoogle: requestedShareToGoogle } =

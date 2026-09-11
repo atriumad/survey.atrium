@@ -44,9 +44,9 @@ export function calculateConversionRate(reviewsTotal: number, scansTotal: number
 }
 
 export function describeAverageRating(averageRating: number, total: number): string {
-  if (total === 0) return "Sin datos aun";
-  if (averageRating >= 4.5) return "Excelente";
-  if (averageRating >= 4) return "Muy bien";
-  if (averageRating >= 3) return "Regular";
-  return "A mejorar";
+  if (total === 0) return "No data yet";
+  if (averageRating >= 4.5) return "Excellent";
+  if (averageRating >= 4) return "Very good";
+  if (averageRating >= 3) return "Average";
+  return "Needs improvement";
 }

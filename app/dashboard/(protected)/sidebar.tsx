@@ -15,7 +15,7 @@ const NAV_ITEMS = [
 export function Sidebar({ role }: { role: Role }) {
   const pathname = usePathname();
   const items =
-    role === "admin" ? [...NAV_ITEMS, { href: "/dashboard/config", label: "Config" }] : NAV_ITEMS;
+    role === "admin" ? [...NAV_ITEMS, { href: "/dashboard/config", label: "Settings" }] : NAV_ITEMS;
 
   return (
     <aside className="flex flex-row lg:flex-col w-full lg:w-56 lg:shrink-0 border-b lg:border-b-0 lg:border-r border-cool bg-off-white lg:sticky lg:top-0 lg:h-screen">
@@ -43,7 +43,7 @@ export function Sidebar({ role }: { role: Role }) {
       <div className="p-3 lg:mt-auto">
         <form action={logout}>
           <Button type="submit" variant="ghost" size="sm" className="w-full justify-start">
-            Cerrar sesion
+            Sign out
           </Button>
         </form>
       </div>

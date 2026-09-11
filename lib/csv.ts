@@ -8,7 +8,7 @@ function escapeCsvField(value: string): string {
 }
 
 export function reviewsToCsv(reviews: Review[]): string {
-  const header = "fecha,rating,clasificacion,comentario,keywords\n";
+  const header = "date,rating,classification,comment,keywords\n";
   const rows = reviews.map((review) => {
     const date = review.created_at.slice(0, 10);
     const comment = escapeCsvField(review.comment ?? "");

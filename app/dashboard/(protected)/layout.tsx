@@ -18,9 +18,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!profile) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center p-6 gap-4 bg-cream">
-        <p className="text-body">No tenes acceso a este dashboard.</p>
+        <p className="text-body">You don't have access to this dashboard.</p>
         <form action={logout}>
-          <Button type="submit" variant="outline">Cerrar sesion</Button>
+          <Button type="submit" variant="outline">Sign out</Button>
         </form>
       </main>
     );

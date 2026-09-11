@@ -19,7 +19,7 @@ export function ExportButton({ reviews }: { reviews: Review[] }) {
 
   return (
     <Button variant="outline" onClick={handleExport} disabled={reviews.length === 0}>
-      Exportar CSV
+      Export CSV
     </Button>
   );
 }
@@ -30,10 +30,10 @@ export function ReviewsTable({ reviews }: { reviews: Review[] }) {
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-cool text-left text-xs uppercase tracking-wide text-body">
-            <th className="p-3 font-medium">Fecha</th>
+            <th className="p-3 font-medium">Date</th>
             <th className="p-3 font-medium">Rating</th>
-            <th className="p-3 font-medium">Clasificacion</th>
-            <th className="p-3 font-medium">Comentario</th>
+            <th className="p-3 font-medium">Classification</th>
+            <th className="p-3 font-medium">Comment</th>
           </tr>
         </thead>
         <tbody>
@@ -52,7 +52,7 @@ export function ReviewsTable({ reviews }: { reviews: Review[] }) {
         </tbody>
       </table>
       {reviews.length === 0 && (
-        <p className="text-body text-center py-8">Sin reviews todavia.</p>
+        <p className="text-body text-center py-8">No reviews yet.</p>
       )}
     </div>
   );

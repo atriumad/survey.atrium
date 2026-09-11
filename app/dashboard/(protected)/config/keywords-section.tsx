@@ -14,24 +14,24 @@ interface Keyword {
 export function KeywordsSection({ keywords }: { keywords: Keyword[] }) {
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-xs uppercase tracking-wide font-semibold text-body">Palabras clave negativas</h2>
+      <h2 className="text-xs uppercase tracking-wide font-semibold text-body">Negative keywords</h2>
       <Card>
         <CardHeader>
-          <CardTitle>Agregar palabra clave</CardTitle>
+          <CardTitle>Add keyword</CardTitle>
         </CardHeader>
         <CardContent>
           <form action={createKeyword} className="flex gap-3 items-end">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="keyword">Palabra</Label>
-              <Input id="keyword" name="keyword" placeholder="ej: lento, sucio, frio" required className="w-64" />
+              <Label htmlFor="keyword">Keyword</Label>
+              <Input id="keyword" name="keyword" placeholder="e.g. slow, dirty, cold" required className="w-64" />
             </div>
-            <Button type="submit">Agregar</Button>
+            <Button type="submit">Add</Button>
           </form>
         </CardContent>
       </Card>
 
       {keywords.length === 0 ? (
-        <p className="text-sm text-body">Todavia no agregaste palabras clave.</p>
+        <p className="text-sm text-body">You haven't added any keywords yet.</p>
       ) : (
         <div className="flex flex-wrap gap-2">
           {keywords.map((kw) => (
