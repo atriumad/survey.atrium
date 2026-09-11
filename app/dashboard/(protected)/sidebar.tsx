@@ -32,7 +32,7 @@ export function Sidebar({ role }: { role: Role }) {
               href={item.href}
               className={cn(
                 "rounded-[14px] px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors",
-                active ? "bg-white shadow-card text-ink" : "text-body hover:bg-white/60 hover:text-ink"
+                active ? "bg-white border border-cool text-ink" : "text-body hover:bg-white/60 hover:text-ink"
               )}
             >
               {item.label}

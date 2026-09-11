@@ -81,7 +81,7 @@ export function ReviewForm({ locationSlug }: { locationSlug: string }) {
     <form
       onSubmit={handleSubmit}
       noValidate
-      className="flex flex-col gap-5 rounded-[26px] bg-white p-6 shadow-card"
+      className="flex flex-col gap-5 rounded-[26px] bg-white p-6 border border-cool"
     >
       <div className="flex items-center justify-center gap-1" aria-label="Progress">
         {STEPS.slice(0, stepCount).map((label, i) => (

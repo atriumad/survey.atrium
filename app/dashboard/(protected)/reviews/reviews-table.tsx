@@ -43,7 +43,7 @@ export function ReviewsTable({
   const fillerCount = fillTo && fillTo > reviews.length ? fillTo - reviews.length : 0;
 
   return (
-    <div className="rounded-[26px] bg-white overflow-hidden shadow-card">
+    <div className="rounded-[26px] bg-white overflow-hidden border border-cool">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-cool text-left text-xs uppercase tracking-wide text-body">
