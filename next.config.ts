@@ -41,7 +41,15 @@ const nextConfig: NextConfig = {
   // this repo manages its own agent docs under .superpowers/.
   agentRules: false,
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      // Dashboard renders per-user data from a cookie session; never let a
+      // browser, proxy, or CDN cache and replay it to a different visitor.
+      {
+        source: "/dashboard/:path*",
+        headers: [{ key: "Cache-Control", value: "private, no-store, must-revalidate" }],
+      },
+    ];
   },
 };
 
