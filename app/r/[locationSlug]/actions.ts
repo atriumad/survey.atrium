@@ -69,5 +69,5 @@ export async function submitReview(formData: FormData) {
     throw new Error("Could not save review");
   }
 
-  redirect(`/r/${locationSlug}/gracias?c=${row.classification}&r=${row.review_id}`);
+  redirect(`/r/${locationSlug}/t?c=${row.classification}&r=${row.review_id}`);
 }
