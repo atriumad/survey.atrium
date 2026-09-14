@@ -9,7 +9,7 @@ import {
 import { LocationFilter } from "./location-filter";
 import { PageHeader } from "./page-header";
 import { ReviewsTable } from "./reviews/reviews-table";
-import { StarRating } from "@/components/ui/star-rating";
+import { RatingEmoji } from "@/components/ui/rating-emoji";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "cn";
 import type { Review, ReviewWithLocation } from "@/lib/types";
@@ -184,7 +184,7 @@ function AverageRatingCard({
           <em className="font-serif italic text-body text-base not-italic:font-serif">{tier}</em>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {total > 0 && <StarRating rating={average} size="sm" />}
+          {total > 0 && <RatingEmoji rating={average} size="sm" />}
           {trend && (
             <span
               className={cn(

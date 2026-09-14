@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "cn";
+import { RATING_EMOJI, RATING_LABEL } from "@/components/ui/rating-emoji";
 import { submitReview } from "./actions";
 
 const STEPS = ["Email", "Your feedback", "Google"];
@@ -135,19 +136,19 @@ export function ReviewForm({ locationSlug }: { locationSlug: string }) {
       {step === 1 && (
         <div className="flex flex-col gap-5">
           <div className="flex gap-2 justify-center" role="radiogroup" aria-label="Rating">
-            {[1, 2, 3, 4, 5].map((star) => (
+            {([1, 2, 3, 4, 5] as const).map((value) => (
               <button
-                key={star}
+                key={value}
                 type="button"
-                aria-label={`${star} stars`}
-                aria-pressed={rating === star}
-                onClick={() => setRating(star)}
+                aria-label={RATING_LABEL[value]}
+                aria-pressed={rating === value}
+                onClick={() => setRating(value)}
                 className={cn(
-                  "text-4xl transition-all",
-                  star <= rating ? "text-amber scale-110" : "text-ink/15 hover:text-amber/60"
+                  "text-4xl transition-all grayscale opacity-40 hover:opacity-100 hover:grayscale-0",
+                  rating === value && "opacity-100 grayscale-0 scale-125"
                 )}
               >
-                ★
+                {RATING_EMOJI[value]}
               </button>
             ))}
           </div>

@@ -3,7 +3,7 @@
 import { useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { StarRating } from "@/components/ui/star-rating";
+import { RatingEmoji } from "@/components/ui/rating-emoji";
 import { exportReviewsCsv, type ReviewExportFilters } from "./actions";
 import type { ReviewWithLocation } from "@/lib/types";
 
@@ -60,7 +60,7 @@ export function ReviewsTable({
             <tr key={review.id} className="border-b border-cool last:border-0">
               <td className="px-4 py-3.5 text-body">{review.email ?? "—"}</td>
               <td className="px-4 py-3.5">
-                <StarRating rating={review.rating} size="sm" />
+                <RatingEmoji rating={review.rating} size="sm" />
               </td>
               <td className="px-4 py-3.5">
                 <Badge variant={review.classification === "good" ? "mint" : "destructive"}>
