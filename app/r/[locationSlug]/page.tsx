@@ -12,10 +12,8 @@ export default async function ReviewPage({
   const supabase = await createClient();
 
   const { data: location, error } = await supabase
-    .from("locations")
-    .select("id, name, client_id")
-    .eq("slug", locationSlug)
-    .single();
+    .rpc("get_public_location", { p_slug: locationSlug })
+    .single<{ id: string; name: string; google_review_url: string | null }>();
 
   if (error || !location) {
     if (error && error.code !== "PGRST116") {
