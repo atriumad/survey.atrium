@@ -40,6 +40,8 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 ### Environment
 `SUPABASE_SERVICE_ROLE_KEY` is required on the server (Vercel: Production and Preview, never exposed to the browser). The superadmin panel uses it.
 
+See the Rollout section of `docs/superpowers/specs/2026-10-08-multi-tenant-admin-design.md` for migration order: apply `0011` only after the app that calls `get_public_location` is deployed, and run the first-superadmin SQL below only after `0012`.
+
 ### First superadmin
 Create the auth user in Supabase Dashboard (Authentication > Users > Add user), then run:
 

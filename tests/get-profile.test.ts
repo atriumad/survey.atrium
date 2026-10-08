@@ -30,6 +30,21 @@ describe("getProfile", () => {
     expect(await getProfile()).toEqual({ clientId: null, role: "superadmin", locationId: null });
   });
 
+  it("returns null for a superadmin role that still has a client", async () => {
+    mockProfileRow({ client_id: "c1", role: "superadmin", location_id: null });
+    expect(await getProfile()).toBeNull();
+  });
+
+  it("returns null for a tenant role without a client", async () => {
+    mockProfileRow({ client_id: null, role: "admin", location_id: null });
+    expect(await getProfile()).toBeNull();
+  });
+
+  it("returns null for an unknown role", async () => {
+    mockProfileRow({ client_id: "c1", role: "owner", location_id: null });
+    expect(await getProfile()).toBeNull();
+  });
+
   it("returns null when there is no profile row", async () => {
     mockProfileRow(null);
     expect(await getProfile()).toBeNull();

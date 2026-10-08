@@ -58,8 +58,13 @@ RLS isolation test with 2 clients x 2 locations (see Testing).
 
 ### Schema (migration `0012`)
 - `profiles.role` check becomes `('superadmin','admin','manager')`.
-- `profiles.client_id` becomes nullable, with check:
-  `role = 'superadmin' or client_id is not null`.
+- `profiles.client_id` becomes nullable, with the two-way check
+  `(role = 'superadmin') = (client_id is null)` (`profiles_client_required`):
+  superadmins have no client and every other role has one.
+- The 0001 policy `admin manages profiles` is dropped. It was `for all` with
+  `using` only, which Postgres reuses as `with check`, so a tenant admin could
+  set their own or a colleague's role to `superadmin`. Tenant admins do not
+  manage profiles through PostgREST; the panel uses the service role.
 - `auth_profile()` unchanged in shape; for superadmin `client_id` is null, so
   existing tenant policies (`client_id = ...`) match nothing. Superadmin never
   reads tenant data through RLS; the panel uses the service-role client.
@@ -112,7 +117,7 @@ README. Not auto-seeded.
 - RLS integration (local Supabase or SQL test): with clients A and B and
   locations A1, A2, B1:
   - anon cannot select `clients`, `locations`, `negative_keywords`.
-  - anon `get_public_location('a1')` returns only `id, name`.
+  - anon `get_public_location('a1')` returns only `id, name, google_review_url`.
   - admin A sees only A's reviews/locations/keywords; none of B's.
   - manager A1 sees only A1 reviews.
   - superadmin through RLS sees no tenant rows.

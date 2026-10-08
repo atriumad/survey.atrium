@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ConfirmSubmitButton } from "../confirm-submit-button";
 import { CredentialsNotice } from "../credentials-notice";
 import { deleteUserAction, resetPasswordAction } from "../actions";
 
@@ -30,7 +31,12 @@ export function UserRow({
           </form>
           <form action={deleteUserAction}>
             <input type="hidden" name="userId" value={user.id} />
-            <Button type="submit" variant="ghost" size="sm">Delete</Button>
+            <ConfirmSubmitButton
+              confirmMessage={`Delete user ${user.email}? They will no longer be able to log in. This cannot be undone.`}
+              ariaLabel={`Delete ${user.email}`}
+            >
+              Delete
+            </ConfirmSubmitButton>
           </form>
         </div>
         {state && !state.ok && <p role="alert" className="text-sm text-red-600">{state.error}</p>}

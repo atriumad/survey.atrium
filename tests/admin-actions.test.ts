@@ -26,9 +26,9 @@ function fd(values: Record<string, string>) {
 type Chain = { eq: () => Chain; maybeSingle: () => Promise<{ data: unknown }> };
 type DbError = { code: string; message: string } | null;
 
-function fakeAdmin(opts: { location?: { id: string } | null; targetRole?: string | null; profileError?: DbError; clientError?: DbError } = {}) {
+function fakeAdmin(opts: { deleteUserError?: { message: string } | null; location?: { id: string } | null; targetRole?: string | null; profileError?: DbError; clientError?: DbError } = {}) {
   const createUser = vi.fn(async () => ({ data: { user: { id: USER_ID } }, error: null }));
-  const deleteUser = vi.fn(async () => ({ error: null }));
+  const deleteUser = vi.fn(async () => ({ error: opts.deleteUserError ?? null }));
   const updateUserById = vi.fn(async () => ({ error: null }));
   const inserts: Record<string, unknown[]> = {};
 
@@ -104,6 +104,23 @@ describe("superadmin actions", () => {
     );
     expect(result.ok).toBe(false);
     expect(admin.deleteUser).toHaveBeenCalledWith(USER_ID);
+  });
+
+  it("logs and reports when the rollback deleteUser fails", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const admin = fakeAdmin({
+      profileError: { code: "23503", message: "fk" },
+      deleteUserError: { message: "cleanup boom" },
+    });
+    const result = await createUserAction(
+      null,
+      fd({ clientId: CLIENT_ID, email: "a@b.com", role: "admin", locationId: "" })
+    );
+    expect(admin.deleteUser).toHaveBeenCalledWith(USER_ID);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toContain("manual cleanup");
+    expect(consoleError).toHaveBeenCalled();
+    consoleError.mockRestore();
   });
 
   it("maps a duplicate client slug to a readable message", async () => {

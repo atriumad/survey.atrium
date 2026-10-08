@@ -24,11 +24,17 @@ export async function getProfile(): Promise<Profile | null> {
 
   if (!data) return null;
 
-  if (data.role === "superadmin") {
+  // Strict pairing, mirroring the profiles_client_required check: a superadmin
+  // has no client, every tenant role has one. Anything else is untrusted.
+  if (data.role === "superadmin" && data.client_id === null) {
     return { role: "superadmin", clientId: null, locationId: null };
   }
 
-  return { role: data.role as TenantProfile["role"], clientId: data.client_id, locationId: data.location_id };
+  if ((data.role === "admin" || data.role === "manager") && typeof data.client_id === "string") {
+    return { role: data.role, clientId: data.client_id, locationId: data.location_id };
+  }
+
+  return null;
 }
 
 // For pages and actions that only make sense inside one tenant. Superadmins

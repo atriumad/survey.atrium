@@ -101,7 +101,13 @@ export async function createUserAction(
   });
   if (profileError) {
     // Do not leave a login that has no profile.
-    await admin.auth.admin.deleteUser(created.user.id);
+    const { error: cleanupError } = await admin.auth.admin.deleteUser(created.user.id);
+    if (cleanupError) {
+      console.error("createUserAction: rollback deleteUser failed", cleanupError.message);
+      return fail(
+        `${describeDbError(profileError, "Could not create user.")} A login for ${email} may need manual cleanup.`
+      );
+    }
     return fail(describeDbError(profileError, "Could not create user."));
   }
 

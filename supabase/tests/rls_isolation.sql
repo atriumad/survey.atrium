@@ -1,7 +1,7 @@
 -- Tenant isolation assertions. Everything runs in one transaction and is
 -- rolled back, so it leaves no data behind.
 -- Run: psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/rls_isolation.sql
--- Needs migrations 0001-0011 applied.
+-- Needs migrations 0001-0012 applied.
 
 begin;
 
@@ -10,7 +10,8 @@ insert into auth.users (id, email, aud, role) values
   ('00000000-0000-0000-0000-0000000000a1', 'rls-admin-a@test.local', 'authenticated', 'authenticated'),
   ('00000000-0000-0000-0000-0000000000a2', 'rls-manager-a1@test.local', 'authenticated', 'authenticated'),
   ('00000000-0000-0000-0000-0000000000b1', 'rls-admin-b@test.local', 'authenticated', 'authenticated')
-  ,('00000000-0000-0000-0000-0000000000f1', 'rls-superadmin@test.local', 'authenticated', 'authenticated');
+  ,('00000000-0000-0000-0000-0000000000f1', 'rls-superadmin@test.local', 'authenticated', 'authenticated')
+  ,('00000000-0000-0000-0000-0000000000f2', 'rls-fresh@test.local', 'authenticated', 'authenticated');
 
 insert into public.clients (id, name, slug) values
   ('00000000-0000-0000-0000-00000000c001', 'RLS Client A', 'rls-client-a'),
@@ -76,7 +77,52 @@ begin
   if (select count(*) from public.reviews) <> 3 then raise exception 'admin A: reviews <> 3'; end if;
   if exists (select 1 from public.locations where slug = 'rls-b1') then raise exception 'admin A sees B location'; end if;
 end $$;
+
+-- Admin A must not be able to promote anyone to superadmin. After 0012 drops
+-- "admin manages profiles" there is no write policy, so an UPDATE touches 0
+-- rows (no error) and an INSERT raises 42501. The two-way check constraint
+-- (check_violation 23514) is a second barrier. Any of these outcomes passes;
+-- success of the write does not.
+do $$
+declare
+  n integer;
+begin
+  begin
+    update public.profiles set role = 'superadmin'
+      where id = '00000000-0000-0000-0000-0000000000a1';
+    get diagnostics n = row_count;
+    if n <> 0 then raise exception 'admin A promoted self to superadmin'; end if;
+  exception when insufficient_privilege or check_violation then null;
+  end;
+  begin
+    update public.profiles set role = 'superadmin'
+      where id = '00000000-0000-0000-0000-0000000000a2';
+    get diagnostics n = row_count;
+    if n <> 0 then raise exception 'admin A promoted manager to superadmin'; end if;
+  exception when insufficient_privilege or check_violation then null;
+  end;
+  begin
+    insert into public.profiles (id, client_id, role)
+      values ('00000000-0000-0000-0000-0000000000f2', '00000000-0000-0000-0000-00000000c001', 'superadmin');
+    raise exception 'admin A inserted a superadmin profile';
+  exception when insufficient_privilege or check_violation then null;
+  end;
+end $$;
 reset role;
+
+-- Verify as the fixture owner that nothing changed.
+do $$
+begin
+  if exists (select 1 from public.profiles where role = 'superadmin' and id <> '00000000-0000-0000-0000-0000000000f1') then
+    raise exception 'unexpected superadmin profile exists after admin A writes';
+  end if;
+  if (select role from public.profiles where id = '00000000-0000-0000-0000-0000000000a1') <> 'admin' then
+    raise exception 'admin A role changed';
+  end if;
+  if (select role from public.profiles where id = '00000000-0000-0000-0000-0000000000a2') <> 'manager' then
+    raise exception 'manager A1 role changed';
+  end if;
+end $$;
 
 -- manager of A1: only that location's reviews.
 set local role authenticated;

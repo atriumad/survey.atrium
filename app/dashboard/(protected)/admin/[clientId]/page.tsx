@@ -2,8 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireSuperadmin } from "@/lib/superadmin";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ConfirmSubmitButton } from "../confirm-submit-button";
 import { PageHeader } from "../../page-header";
 import { deleteLocationAction } from "../actions";
 import { CreateLocationForm } from "./create-location-form";
@@ -13,21 +15,30 @@ import { UserRow } from "./user-row";
 export const dynamic = "force-dynamic";
 
 export default async function AdminClientPage({ params }: { params: Promise<{ clientId: string }> }) {
+  await requireSuperadmin();
   const { clientId } = await params;
   if (!z.uuid().safeParse(clientId).success) notFound();
 
   const admin = createAdminClient();
-  const [{ data: client }, { data: locations }, { data: profiles }] = await Promise.all([
+  const [
+    { data: client, error: clientError },
+    { data: locations, error: locationsError },
+    { data: profiles, error: profilesError },
+  ] = await Promise.all([
     admin.from("clients").select("id, name, slug").eq("id", clientId).maybeSingle(),
     admin.from("locations").select("id, name, slug, google_review_url").eq("client_id", clientId).order("name"),
     admin.from("profiles").select("id, role, location_id").eq("client_id", clientId),
   ]);
+  if (clientError) throw clientError;
+  if (locationsError) throw locationsError;
+  if (profilesError) throw profilesError;
   if (!client) notFound();
 
   const locationNames = new Map((locations ?? []).map((l) => [l.id, l.name]));
   const users = await Promise.all(
     (profiles ?? []).map(async (p) => {
-      const { data } = await admin.auth.admin.getUserById(p.id);
+      const { data, error } = await admin.auth.admin.getUserById(p.id);
+      if (error) throw error;
       return {
         id: p.id,
         role: p.role as string,
@@ -68,9 +79,12 @@ export default async function AdminClientPage({ params }: { params: Promise<{ cl
               </div>
               <form action={deleteLocationAction}>
                 <input type="hidden" name="locationId" value={l.id} />
-                <Button type="submit" variant="ghost" size="sm" title="Also deletes this location's reviews">
+                <ConfirmSubmitButton
+                  confirmMessage={`Delete location "${l.name}"? This also deletes all of its reviews and scans. This cannot be undone.`}
+                  ariaLabel={`Delete ${l.name}`}
+                >
                   Delete
-                </Button>
+                </ConfirmSubmitButton>
               </form>
             </CardContent>
           </Card>

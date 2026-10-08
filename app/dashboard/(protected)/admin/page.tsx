@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireSuperadmin } from "@/lib/superadmin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "../page-header";
 import { CreateClientForm } from "./create-client-form";
@@ -7,6 +8,7 @@ import { CreateClientForm } from "./create-client-form";
 export const dynamic = "force-dynamic";
 
 export default async function AdminClientsPage() {
+  await requireSuperadmin();
   const admin = createAdminClient();
   const { data: clients, error } = await admin
     .from("clients")
