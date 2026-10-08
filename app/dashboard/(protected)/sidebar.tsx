@@ -15,7 +15,11 @@ const NAV_ITEMS = [
 export function Sidebar({ role }: { role: Role }) {
   const pathname = usePathname();
   const items =
-    role === "admin" ? [...NAV_ITEMS, { href: "/dashboard/config", label: "Settings" }] : NAV_ITEMS;
+    role === "superadmin"
+      ? [{ href: "/dashboard/admin", label: "Clients" }]
+      : role === "admin"
+        ? [...NAV_ITEMS, { href: "/dashboard/config", label: "Settings" }]
+        : NAV_ITEMS;
 
   return (
     <aside className="flex flex-row lg:flex-col w-full lg:w-56 lg:shrink-0 border-b lg:border-b-0 lg:border-r border-cool bg-off-white lg:sticky lg:top-0 lg:h-screen">
@@ -25,7 +29,8 @@ export function Sidebar({ role }: { role: Role }) {
       </div>
       <nav className="flex-1 flex flex-row lg:flex-col gap-1 p-3 overflow-x-auto">
         {items.map((item) => {
-          const active = pathname === item.href;
+          const active =
+            item.href === "/dashboard" ? pathname === item.href : pathname.startsWith(item.href);
           return (
             <Link
               key={item.href}
