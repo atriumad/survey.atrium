@@ -5,7 +5,7 @@
 
 begin;
 
--- Fixtures (inserted as the connecting superuser, which bypasses RLS).
+-- Fixtures (inserted as the connecting role, postgres, which has BYPASSRLS).
 insert into auth.users (id, email, aud, role) values
   ('00000000-0000-0000-0000-0000000000a1', 'rls-admin-a@test.local', 'authenticated', 'authenticated'),
   ('00000000-0000-0000-0000-0000000000a2', 'rls-manager-a1@test.local', 'authenticated', 'authenticated'),
@@ -39,9 +39,21 @@ insert into public.reviews (client_id, location_id, rating, comment, classificat
 set local role anon;
 do $$
 begin
-  if (select count(*) from public.clients) <> 0 then raise exception 'anon can read clients'; end if;
-  if (select count(*) from public.locations) <> 0 then raise exception 'anon can read locations'; end if;
-  if (select count(*) from public.negative_keywords) <> 0 then raise exception 'anon can read negative_keywords'; end if;
+  -- 0011 revokes anon's SELECT on these tables, so a read raises 42501.
+  -- That is the pass case. Any row returned is a leak and raises P0001,
+  -- which the handler does not catch.
+  begin
+    if (select count(*) from public.clients) <> 0 then raise exception 'anon can read clients'; end if;
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    if (select count(*) from public.locations) <> 0 then raise exception 'anon can read locations'; end if;
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    if (select count(*) from public.negative_keywords) <> 0 then raise exception 'anon can read negative_keywords'; end if;
+  exception when insufficient_privilege then null;
+  end;
   if (select count(*) from public.reviews) <> 0 then raise exception 'anon can read reviews'; end if;
   if (select count(*) from public.get_public_location('rls-a1')) <> 1 then raise exception 'rpc: known slug not found'; end if;
   if (select name from public.get_public_location('rls-a1')) <> 'A One' then raise exception 'rpc: wrong name'; end if;
