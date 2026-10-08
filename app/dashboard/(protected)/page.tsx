@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { getProfile } from "@/lib/get-profile";
+import { getTenantProfile } from "@/lib/get-profile";
 import {
   summarizeReviews,
   calculateConversionRate,
@@ -24,7 +24,7 @@ export default async function DashboardHomePage({
   searchParams: Promise<{ location?: string }>;
 }) {
   const { location } = await searchParams;
-  const profile = await getProfile();
+  const profile = await getTenantProfile();
   if (!profile) return null;
 
   const supabase = await createClient();

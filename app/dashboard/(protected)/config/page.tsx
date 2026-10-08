@@ -1,13 +1,13 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getProfile } from "@/lib/get-profile";
+import { getTenantProfile } from "@/lib/get-profile";
 import { getSiteUrl } from "@/lib/site-url";
 import { LocationsSection } from "./locations-section";
 import { KeywordsSection } from "./keywords-section";
 import { PageHeader } from "../page-header";
 
 export default async function ConfigPage() {
-  const profile = await getProfile();
+  const profile = await getTenantProfile();
   if (!profile || profile.role !== "admin") redirect("/dashboard");
 
   const supabase = await createClient();

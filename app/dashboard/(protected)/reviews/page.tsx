@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { getProfile } from "@/lib/get-profile";
+import { getTenantProfile } from "@/lib/get-profile";
 import { ExportButton, ReviewsTable } from "./reviews-table";
 import { ReviewsPager } from "./pager";
 import { LocationFilter } from "../location-filter";
@@ -20,7 +20,7 @@ export default async function ReviewsPage({
   }>;
 }) {
   const params = await searchParams;
-  const profile = await getProfile();
+  const profile = await getTenantProfile();
   if (!profile) return null;
   const role = profile.role;
 

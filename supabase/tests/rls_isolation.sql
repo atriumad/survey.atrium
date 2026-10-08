@@ -9,7 +9,8 @@ begin;
 insert into auth.users (id, email, aud, role) values
   ('00000000-0000-0000-0000-0000000000a1', 'rls-admin-a@test.local', 'authenticated', 'authenticated'),
   ('00000000-0000-0000-0000-0000000000a2', 'rls-manager-a1@test.local', 'authenticated', 'authenticated'),
-  ('00000000-0000-0000-0000-0000000000b1', 'rls-admin-b@test.local', 'authenticated', 'authenticated');
+  ('00000000-0000-0000-0000-0000000000b1', 'rls-admin-b@test.local', 'authenticated', 'authenticated')
+  ,('00000000-0000-0000-0000-0000000000f1', 'rls-superadmin@test.local', 'authenticated', 'authenticated');
 
 insert into public.clients (id, name, slug) values
   ('00000000-0000-0000-0000-00000000c001', 'RLS Client A', 'rls-client-a'),
@@ -24,6 +25,9 @@ insert into public.profiles (id, client_id, role, location_id) values
   ('00000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-00000000c001', 'admin', null),
   ('00000000-0000-0000-0000-0000000000a2', '00000000-0000-0000-0000-00000000c001', 'manager', '00000000-0000-0000-0000-000000000101'),
   ('00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-00000000c002', 'admin', null);
+
+insert into public.profiles (id, client_id, role, location_id) values
+  ('00000000-0000-0000-0000-0000000000f1', null, 'superadmin', null);
 
 insert into public.negative_keywords (client_id, keyword) values
   ('00000000-0000-0000-0000-00000000c001', 'rls-secret-a'),
@@ -94,6 +98,18 @@ begin
   if (select count(*) from public.locations) <> 1 then raise exception 'admin B: locations <> 1'; end if;
   if (select count(*) from public.reviews) <> 1 then raise exception 'admin B: reviews <> 1'; end if;
   if exists (select 1 from public.negative_keywords where keyword = 'rls-secret-a') then raise exception 'admin B sees A keywords'; end if;
+end $$;
+reset role;
+
+-- superadmin: authenticated but sees no tenant rows through RLS.
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000f1","role":"authenticated"}', true);
+do $$
+begin
+  if (select count(*) from public.clients) <> 0 then raise exception 'superadmin reads clients via RLS'; end if;
+  if (select count(*) from public.locations) <> 0 then raise exception 'superadmin reads locations via RLS'; end if;
+  if (select count(*) from public.reviews) <> 0 then raise exception 'superadmin reads reviews via RLS'; end if;
+  if not public.is_superadmin() then raise exception 'is_superadmin() false for superadmin'; end if;
 end $$;
 reset role;
 
