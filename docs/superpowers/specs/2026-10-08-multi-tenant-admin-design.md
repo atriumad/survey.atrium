@@ -33,13 +33,16 @@ survey URLs or printed QR codes.
 `negative_keywords`. Anyone with the public anon key can list every tenant,
 its locations/slugs/review URLs and its negative keywords.
 
-### Change (migration `0010`)
+### Change (migrations `0010` and `0011`)
 - Add `get_public_location(p_slug text)` RPC, `security definer`,
-  `set search_path = ''`, returning only `id, name` (what `/r/[locationSlug]`
-  renders and what `record_qr_scan` needs). `grant execute` to `anon`.
-- Drop the three `anon can read ...` policies.
-- `/r/[locationSlug]/page.tsx` calls the RPC instead of
-  `from("locations")`.
+  `set search_path = ''`, returning only `id, name, google_review_url` (what
+  `/r/[locationSlug]` renders and what `record_qr_scan` needs; the thank-you
+  page needs the review link, which is shown to the visitor anyway).
+  `grant execute` to `anon`. Migration `0010`, additive.
+- Drop the three `anon can read ...` policies in migration `0011`, applied
+  only after the app that calls the RPC is deployed.
+- `/r/[locationSlug]/page.tsx` and the thank-you page
+  `/r/[locationSlug]/t` call the RPC instead of `from("locations")`.
 - Review submit and QR scan already go through `security definer` RPCs; no
   change. Keywords are evaluated inside the submit RPC, so they stay private.
 
@@ -53,7 +56,7 @@ RLS isolation test with 2 clients x 2 locations (see Testing).
 
 ## Part 2: Superadmin role and panel
 
-### Schema (migration `0011`)
+### Schema (migration `0012`)
 - `profiles.role` check becomes `('superadmin','admin','manager')`.
 - `profiles.client_id` becomes nullable, with check:
   `role = 'superadmin' or client_id is not null`.
@@ -117,13 +120,19 @@ README. Not auto-seeded.
 
 ## Rollout
 
-1. Deploy code that calls `get_public_location` together with migration
-   `0010` (RPC must exist before the page uses it; drop the anon policies in
-   the same migration, after the RPC is created).
-2. Migration `0011`, set `SUPABASE_SERVICE_ROLE_KEY` in Vercel, create first
-   superadmin by SQL, then use the panel.
-3. Rollback: `0010` keeps policies in a commented revert block; `0011` is
-   additive (role check widened, column nullable).
+1. Apply `0010` (RPC, additive) to production.
+2. Set `SUPABASE_SERVICE_ROLE_KEY` in Vercel and push `main` (deploys the app
+   that calls `get_public_location`).
+3. Smoke test in production: an existing `/r/<slug>` QR URL loads, a review
+   submits, the thank-you page works, an unknown slug returns 404. Pause here
+   before continuing.
+4. Apply `0011` (drops the anon policies), then re-run the smoke test and
+   `curl` the REST endpoint with the anon key to confirm `clients`,
+   `locations` and `negative_keywords` return `[]`.
+5. Apply `0012` (superadmin), create the first superadmin with the README SQL,
+   then use the panel.
+6. Rollback: `0011` keeps the dropped policies in a commented revert block;
+   `0010` and `0012` are additive (role check widened, column nullable).
 
 ## Open risks
 
