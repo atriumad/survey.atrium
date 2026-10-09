@@ -1,7 +1,7 @@
 -- Tenant isolation assertions. Everything runs in one transaction and is
 -- rolled back, so it leaves no data behind.
 -- Run: psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/rls_isolation.sql
--- Needs migrations 0001-0012 applied.
+-- Needs migrations 0001-0013 applied.
 
 begin;
 
@@ -63,6 +63,8 @@ begin
   if (select count(*) from public.get_public_location('rls-a1')) <> 1 then raise exception 'rpc: known slug not found'; end if;
   if (select name from public.get_public_location('rls-a1')) <> 'A One' then raise exception 'rpc: wrong name'; end if;
   if (select count(*) from public.get_public_location('does-not-exist')) <> 0 then raise exception 'rpc: unknown slug returned rows'; end if;
+  if (select client_name from public.get_public_location('rls-a1')) <> 'RLS Client A' then raise exception 'rpc: wrong client_name'; end if;
+  if (select client_logo_url from public.get_public_location('rls-a1')) is not null then raise exception 'rpc: unexpected client_logo_url'; end if;
 end $$;
 reset role;
 

@@ -7,6 +7,8 @@ import { requireSuperadmin } from "@/lib/superadmin";
 import { generatePassword } from "@/lib/passwords";
 import { describeDbError } from "@/lib/db-errors";
 import type { ActionResult } from "@/lib/action-result";
+import { LOGO_EXTENSIONS, LOGO_MAX_BYTES, detectImageType } from "@/lib/image-type";
+import { z } from "zod";
 import {
   adminLocationFormSchema,
   clientDeleteSchema,
@@ -247,4 +249,81 @@ export async function deleteClientAction(_prev: ActionResult | null, formData: F
 
   revalidatePath(ADMIN_PATH, "layout");
   redirect(`${ADMIN_PATH}/clients`);
+}
+
+const LOGO_BUCKET = "client-logos";
+
+// Public URLs look like <base>/storage/v1/object/public/client-logos/<path>.
+// Only paths inside the client's own folder are returned, so a tampered url can never delete another object.
+function logoPathFromUrl(url: string | null | undefined, clientId: string): string | null {
+  if (!url) return null;
+  const marker = `/${LOGO_BUCKET}/`;
+  const index = url.indexOf(marker);
+  if (index === -1) return null;
+  const path = url.slice(index + marker.length);
+  if (path.includes("..")) return null;
+  return new RegExp(`^${clientId}/[A-Za-z0-9._-]+$`).test(path) ? path : null;
+}
+
+async function removeLogoObject(storage: { remove: (paths: string[]) => PromiseLike<{ error: { message: string } | null }> }, path: string) {
+  const { error } = await storage.remove([path]);
+  if (error) console.error("client logo cleanup failed", error.message);
+}
+
+export async function uploadClientLogoAction(
+  _prev: ActionResult<{ url: string }> | null,
+  formData: FormData
+): Promise<ActionResult<{ url: string }>> {
+  await requireSuperadmin();
+  const clientId = formData.get("clientId");
+  if (!z.uuid().safeParse(clientId).success) return fail("Invalid client.");
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) return fail("Choose an image to upload.");
+  if (file.size > LOGO_MAX_BYTES) return fail("The image must be 2 MB or smaller.");
+
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const mime = detectImageType(bytes);
+  if (!mime) return fail("Upload a PNG, JPG or WebP image.");
+
+  const admin = createAdminClient();
+  const { data: client } = await admin.from("clients").select("logo_url").eq("id", clientId as string).maybeSingle();
+  if (!client) return fail("Client not found.");
+
+  const path = `${clientId}/${Date.now()}.${LOGO_EXTENSIONS[mime]}`;
+  const storage = admin.storage.from(LOGO_BUCKET);
+  const { error: uploadError } = await storage.upload(path, bytes, { contentType: mime, upsert: false });
+  if (uploadError) return fail("Could not upload the logo.");
+
+  const url = storage.getPublicUrl(path).data.publicUrl;
+  const { error: updateError } = await admin.from("clients").update({ logo_url: url }).eq("id", clientId as string);
+  if (updateError) {
+    await removeLogoObject(storage, path); // do not leave an orphaned object
+    return fail("Could not save the logo.");
+  }
+
+  const previous = logoPathFromUrl(client.logo_url, clientId as string);
+  if (previous && previous !== path) await removeLogoObject(storage, previous);
+
+  revalidatePath(`${ADMIN_PATH}/clients/${clientId}`, "layout");
+  return { ok: true, data: { url } };
+}
+
+export async function removeClientLogoAction(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  await requireSuperadmin();
+  const clientId = formData.get("clientId");
+  if (!z.uuid().safeParse(clientId).success) return fail("Invalid client.");
+
+  const admin = createAdminClient();
+  const { data: client } = await admin.from("clients").select("logo_url").eq("id", clientId as string).maybeSingle();
+  if (!client) return fail("Client not found.");
+  if (!client.logo_url) return { ok: true, data: null };
+
+  const { error } = await admin.from("clients").update({ logo_url: null }).eq("id", clientId as string);
+  if (error) return fail("Could not remove the logo.");
+
+  const path = logoPathFromUrl(client.logo_url, clientId as string);
+  if (path) await removeLogoObject(admin.storage.from(LOGO_BUCKET), path);
+
+  revalidatePath(`${ADMIN_PATH}/clients/${clientId}`, "layout");
+  return { ok: true, data: null };
 }
