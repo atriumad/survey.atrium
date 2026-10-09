@@ -2,29 +2,41 @@ import { describe, expect, it } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   buildAgencyOverview,
+  loadAgencyOverview,
+  loadClientsIndex,
   loadOverviewData,
   loadReviewsPage,
   toClientIndexRow,
 } from "@/lib/dashboard-data";
 
 type Op = [string, ...unknown[]];
-type Result = { data?: unknown; count?: number | null; error?: unknown };
+type Result = {
+  data?: unknown;
+  count?: number | null;
+  error?: unknown;
+};
+type TableResult = Result | { data: (call: number) => unknown; count?: number | null; error?: unknown };
 
-function fakeSupabase(tables: Record<string, Result>) {
+function fakeSupabase(tables: Record<string, TableResult>) {
   const calls: { table: string; ops: Op[] }[] = [];
+  const invocations: Record<string, number> = {};
   const from = (table: string) => {
     const call = { table, ops: [] as Op[] };
     calls.push(call);
+    const index = invocations[table] ?? 0;
+    invocations[table] = index + 1;
     const result = tables[table] ?? { data: [] };
     const builder: Record<string, unknown> = {};
-    for (const op of ["select", "eq", "gte", "lt", "lte", "order", "range"]) {
+    for (const op of ["select", "eq", "gte", "lt", "lte", "order", "range", "limit"]) {
       builder[op] = (...args: unknown[]) => {
         call.ops.push([op, ...args]);
         return builder;
       };
     }
-    builder.then = (resolve: (value: unknown) => unknown) =>
-      resolve({ data: result.data ?? null, count: result.count ?? null, error: result.error ?? null });
+    builder.then = (resolve: (value: unknown) => unknown) => {
+      const data = typeof result.data === "function" ? result.data(index) : result.data;
+      return resolve({ data: data ?? null, count: result.count ?? null, error: result.error ?? null });
+    };
     return builder;
   };
   return { client: { from } as unknown as SupabaseClient, calls };
@@ -129,6 +141,59 @@ describe("loadReviewsPage", () => {
   });
 });
 
+describe("loadClientsIndex", () => {
+  it("orders by name and the latest review, limits embedded reviews to one, and maps rows", async () => {
+    const { client, calls } = fakeSupabase({
+      clients: {
+        data: [
+          {
+            id: "c1",
+            name: "Acme",
+            slug: "acme",
+            locations: [{ count: 2 }],
+            profiles: [{ count: 3 }],
+            reviews: [{ created_at: "2026-10-01T00:00:00Z" }],
+          },
+        ],
+      },
+    });
+    const rows = await loadClientsIndex(client);
+    expect(calls[0].ops).toContainEqual(["order", "created_at", { ascending: false, referencedTable: "reviews" }]);
+    expect(calls[0].ops).toContainEqual(["limit", 1, { referencedTable: "reviews" }]);
+    expect(rows).toEqual([
+      { id: "c1", name: "Acme", slug: "acme", locationsCount: 2, usersCount: 3, lastReviewAt: "2026-10-01T00:00:00Z" },
+    ]);
+  });
+});
+
+describe("loadAgencyOverview", () => {
+  it("pages through more than 1000 ratings", async () => {
+    const page1 = Array.from({ length: 1000 }, () => ({ rating: 4 }));
+    const page2 = Array.from({ length: 5 }, () => ({ rating: 2 }));
+    const { client, calls } = fakeSupabase({
+      clients: { data: [] },
+      reviews: { data: (i: number) => (i === 0 ? page1 : page2) },
+    });
+    const overview = await loadAgencyOverview(client);
+    expect(overview.totals.reviews30d).toBe(1005);
+    expect(overview.totals.average30d).toBeCloseTo((4 * 1000 + 2 * 5) / 1005);
+    const reviewCalls = calls.filter((c) => c.table === "reviews");
+    expect(reviewCalls).toHaveLength(2);
+    expect(hasOp(reviewCalls[0].ops, "range", 0, 999)).toBe(true);
+    expect(hasOp(reviewCalls[1].ops, "range", 1000, 1999)).toBe(true);
+  });
+});
+
+describe("loadOverviewData paging", () => {
+  it("throws when the rating query fails", async () => {
+    const { client } = fakeSupabase({
+      reviews: { error: new Error("ratings down") },
+      qr_scans: { count: 0 },
+    });
+    await expect(loadOverviewData(client, { clientId: "c1" })).rejects.toThrow("ratings down");
+  });
+});
+
 describe("toClientIndexRow", () => {
   it("maps embedded counts and the latest review", () => {
     expect(
@@ -189,5 +254,14 @@ describe("buildAgencyOverview", () => {
     const result = buildAgencyOverview(clients, []);
     expect(result.recentClients.map((c) => c.id)).toEqual(["new", "c4", "c5", "c6", "old"]);
     expect(result.totals.average30d).toBe(0);
+  });
+
+  it("orders by parsed timestamps, not string comparison", () => {
+    const clients = [
+      row("offset", "2026-10-01T05:00:00+05:00"),
+      row("utc", "2026-10-01T02:00:00Z"),
+    ];
+    const result = buildAgencyOverview(clients, []);
+    expect(result.recentClients.map((c) => c.id)).toEqual(["utc", "offset"]);
   });
 });

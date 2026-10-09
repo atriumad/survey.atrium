@@ -10,6 +10,8 @@ import {
 import type { Review, ReviewWithLocation } from "@/lib/types";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+// PostgREST/Supabase silently caps a response at 1000 rows, so unbounded reads are paged.
+const PAGE = 1000;
 
 function daysAgoIso(days: number, now: number): string {
   return new Date(now - days * DAY_MS).toISOString();
@@ -17,6 +19,20 @@ function daysAgoIso(days: number, now: number): string {
 
 function averageOf(ratings: number[]): number {
   return ratings.length === 0 ? 0 : ratings.reduce((sum, r) => sum + r, 0) / ratings.length;
+}
+
+// Reads every row a query matches by fetching PAGE-sized windows until a short page arrives.
+// `build` must apply a deterministic order so that pages do not overlap or skip rows.
+async function fetchAll<T>(
+  build: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: unknown }>
+): Promise<T[]> {
+  const rows: T[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await build(from, from + PAGE - 1);
+    if (error) throw error;
+    rows.push(...(data ?? []));
+    if (!data || data.length < PAGE) return rows;
+  }
 }
 
 export interface OverviewScope {
@@ -40,8 +56,17 @@ export async function loadOverviewData(
 ): Promise<OverviewData> {
   const { clientId, locationId } = scope;
 
-  let reviewsQuery = supabase.from("reviews").select("*").eq("client_id", clientId);
-  if (locationId) reviewsQuery = reviewsQuery.eq("location_id", locationId);
+  const allReviewsPromise = fetchAll<Review>((from, to) => {
+    let q = supabase
+      .from("reviews")
+      .select("*")
+      .eq("client_id", clientId)
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
+      .range(from, to);
+    if (locationId) q = q.eq("location_id", locationId);
+    return q;
+  });
 
   let scansQuery = supabase
     .from("qr_scans")
@@ -49,20 +74,32 @@ export async function loadOverviewData(
     .eq("client_id", clientId);
   if (locationId) scansQuery = scansQuery.eq("location_id", locationId);
 
-  let currentQuery = supabase
-    .from("reviews")
-    .select("rating")
-    .eq("client_id", clientId)
-    .gte("created_at", daysAgoIso(30, now));
-  if (locationId) currentQuery = currentQuery.eq("location_id", locationId);
+  const currentRatingsPromise = fetchAll<{ rating: number }>((from, to) => {
+    let q = supabase
+      .from("reviews")
+      .select("rating")
+      .eq("client_id", clientId)
+      .gte("created_at", daysAgoIso(30, now))
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
+      .range(from, to);
+    if (locationId) q = q.eq("location_id", locationId);
+    return q;
+  });
 
-  let previousQuery = supabase
-    .from("reviews")
-    .select("rating")
-    .eq("client_id", clientId)
-    .gte("created_at", daysAgoIso(60, now))
-    .lt("created_at", daysAgoIso(30, now));
-  if (locationId) previousQuery = previousQuery.eq("location_id", locationId);
+  const previousRatingsPromise = fetchAll<{ rating: number }>((from, to) => {
+    let q = supabase
+      .from("reviews")
+      .select("rating")
+      .eq("client_id", clientId)
+      .gte("created_at", daysAgoIso(60, now))
+      .lt("created_at", daysAgoIso(30, now))
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
+      .range(from, to);
+    if (locationId) q = q.eq("location_id", locationId);
+    return q;
+  });
 
   let recentQuery = supabase
     .from("reviews")
@@ -72,21 +109,20 @@ export async function loadOverviewData(
     .order("created_at", { ascending: false });
   if (locationId) recentQuery = recentQuery.eq("location_id", locationId);
 
-  const [reviewsRes, scansRes, currentRes, previousRes, recentRes] = await Promise.all([
-    reviewsQuery,
+  const [allReviews, scansRes, currentRatingRows, previousRatingRows, recentRes] = await Promise.all([
+    allReviewsPromise,
     scansQuery,
-    currentQuery,
-    previousQuery,
+    currentRatingsPromise,
+    previousRatingsPromise,
     recentQuery,
   ]);
-  for (const res of [reviewsRes, scansRes, currentRes, previousRes, recentRes]) {
-    if (res.error) throw res.error;
-  }
+  if (scansRes.error) throw scansRes.error;
+  if (recentRes.error) throw recentRes.error;
 
-  const summary = summarizeReviews((reviewsRes.data ?? []) as Review[]);
+  const summary = summarizeReviews(allReviews as Review[]);
   const scansTotal = scansRes.count ?? 0;
-  const currentRatings = ((currentRes.data ?? []) as { rating: number }[]).map((r) => r.rating);
-  const previousRatings = ((previousRes.data ?? []) as { rating: number }[]).map((r) => r.rating);
+  const currentRatings = currentRatingRows.map((r) => r.rating);
+  const previousRatings = previousRatingRows.map((r) => r.rating);
 
   return {
     summary,
@@ -201,7 +237,7 @@ export interface AgencyOverview {
 
 export function buildAgencyOverview(clients: ClientIndexRow[], ratings30d: number[]): AgencyOverview {
   const byRecency = [...clients].sort((a, b) => {
-    if (a.lastReviewAt && b.lastReviewAt) return b.lastReviewAt.localeCompare(a.lastReviewAt);
+    if (a.lastReviewAt && b.lastReviewAt) return Date.parse(b.lastReviewAt) - Date.parse(a.lastReviewAt);
     if (a.lastReviewAt) return -1;
     if (b.lastReviewAt) return 1;
     return 0;
@@ -217,12 +253,23 @@ export function buildAgencyOverview(clients: ClientIndexRow[], ratings30d: numbe
   };
 }
 
+// Intentionally cross-tenant: reads all clients and all reviews. Must only be called with the
+// service-role client, and only from a caller guarded by requireSuperadmin().
 export async function loadAgencyOverview(admin: SupabaseClient, now: number = Date.now()): Promise<AgencyOverview> {
-  const [clients, ratingsRes] = await Promise.all([
+  const [clients, ratings] = await Promise.all([
     loadClientsIndex(admin),
-    admin.from("reviews").select("rating").gte("created_at", daysAgoIso(30, now)),
+    fetchAll<{ rating: number }>((from, to) =>
+      admin
+        .from("reviews")
+        .select("rating")
+        .gte("created_at", daysAgoIso(30, now))
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true })
+        .range(from, to)
+    ),
   ]);
-  if (ratingsRes.error) throw ratingsRes.error;
-  const ratings = ((ratingsRes.data ?? []) as { rating: number }[]).map((r) => r.rating);
-  return buildAgencyOverview(clients, ratings);
+  return buildAgencyOverview(
+    clients,
+    ratings.map((r) => r.rating)
+  );
 }
