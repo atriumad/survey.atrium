@@ -51,7 +51,7 @@ select id, null, 'superadmin' from auth.users where email = 'YOUR_EMAIL';
 ```
 
 ### Onboarding a client
-Log in as superadmin, open `/dashboard/admin`, create the client, add its locations (slugs are globally unique, so prefix them with the client slug), then create the client's admin user and hand over the generated password.
+Log in as superadmin. `/dashboard/admin` is the agency Overview and `/dashboard/admin/clients` lists the clients. Create the client, open it, then use its tabs: **Locations** (add locations and download their QR codes; slugs are globally unique, so prefix them with the client slug), **Users** (create the client's admin and hand over the generated password), **Reviews** (read-only), **Settings** (rename or delete the client).
 
 ### Isolation test
 `psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/rls_isolation.sql` (rolls back; run after any RLS change).
