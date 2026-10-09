@@ -11,9 +11,9 @@ import { RATING_EMOJI, RATING_LABEL } from "@/components/ui/rating-emoji";
 import { needsFeedback } from "@/lib/survey-flow";
 import { submitReview } from "./actions";
 
-const STEPS = ["Email", "Your rating"];
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// 0 = email, 1 = rating (emojis only), 2 = feedback (ratings 1-3 only)
 export function ReviewForm({ locationSlug }: { locationSlug: string }) {
   const [step, setStep] = useState(0);
   const [email, setEmail] = useState("");
@@ -25,12 +25,14 @@ export function ReviewForm({ locationSlug }: { locationSlug: string }) {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const feedbackRequired = needsFeedback(rating);
+  const stepCount = feedbackRequired ? 3 : 2;
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (pending) return;
     if (step === 0) handleEmailNext();
-    else handleRatingSubmit();
+    else if (step === 1) handleRatingContinue();
+    else handleFeedbackSend();
   }
 
   function handleEmailNext() {
@@ -57,9 +59,18 @@ export function ReviewForm({ locationSlug }: { locationSlug: string }) {
     }
   }
 
-  function handleRatingSubmit() {
+  function handleRatingContinue() {
     if (rating === 0) return;
-    if (feedbackRequired && comment.trim().length === 0) {
+    if (feedbackRequired) {
+      setStep(2);
+      return;
+    }
+    // Ratings 4-5 are saved now and land on the "share on Google?" screen.
+    void submit();
+  }
+
+  function handleFeedbackSend() {
+    if (comment.trim().length === 0) {
       setCommentError("Tell us what happened so we can follow up.");
       return;
     }
@@ -85,6 +96,8 @@ export function ReviewForm({ locationSlug }: { locationSlug: string }) {
     }
   }
 
+  const labels = feedbackRequired ? ["Email", "Rating", "Feedback"] : ["Email", "Rating"];
+
   return (
     <form
       onSubmit={handleSubmit}
@@ -92,7 +105,7 @@ export function ReviewForm({ locationSlug }: { locationSlug: string }) {
       className="flex flex-col gap-5 rounded-[26px] bg-white p-6 border border-cool"
     >
       <div className="flex items-center justify-center gap-1" aria-label="Progress">
-        {STEPS.map((label, i) => (
+        {labels.slice(0, stepCount).map((label, i) => (
           <div key={label} className="flex items-center gap-1">
             {i > 0 && (
               <div className={cn("h-px w-6", i <= step ? "bg-amber" : "bg-ink/15")} />
@@ -150,6 +163,7 @@ export function ReviewForm({ locationSlug }: { locationSlug: string }) {
                 aria-label={RATING_LABEL[value]}
                 aria-pressed={rating === value}
                 onClick={() => selectRating(value)}
+                disabled={pending}
                 className={cn(
                   "text-4xl transition-all grayscale opacity-40 hover:opacity-100 hover:grayscale-0",
                   rating === value && "opacity-100 grayscale-0 scale-125"
@@ -158,33 +172,6 @@ export function ReviewForm({ locationSlug }: { locationSlug: string }) {
                 {RATING_EMOJI[value]}
               </button>
             ))}
-          </div>
-
-          <div aria-live="polite">
-            {feedbackRequired && (
-              <div className="flex flex-col gap-3">
-                <p className="text-sm text-body text-center">
-                  We&apos;re sorry about your experience. Tell us what happened and we&apos;ll get
-                  back to you as soon as possible.
-                </p>
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="comment">What happened? (required)</Label>
-                  <Textarea
-                    id="comment"
-                    name="comment"
-                    placeholder="Tell us what happened so we can make it right"
-                    className="min-h-28"
-                    value={comment}
-                    onChange={(e) => {
-                      setComment(e.target.value);
-                      if (commentError) setCommentError(null);
-                    }}
-                    aria-invalid={commentError ? true : undefined}
-                  />
-                  {commentError && <p className="text-sm text-destructive">{commentError}</p>}
-                </div>
-              </div>
-            )}
           </div>
 
           <div className="flex gap-3">
@@ -204,6 +191,46 @@ export function ReviewForm({ locationSlug }: { locationSlug: string }) {
               className="h-11 flex-1 rounded-[18px]"
               disabled={rating === 0 || pending}
             >
+              {pending ? "Sending..." : "Continue"}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {step === 2 && (
+        <div className="flex flex-col gap-5">
+          <p className="text-sm text-body text-center">
+            We&apos;re sorry about your experience. Tell us what happened and we&apos;ll get back
+            to you as soon as possible.
+          </p>
+          <div className="flex flex-col gap-2" aria-live="polite">
+            <Label htmlFor="comment">What happened? (required)</Label>
+            <Textarea
+              id="comment"
+              name="comment"
+              placeholder="Tell us what happened so we can make it right"
+              className="min-h-28"
+              value={comment}
+              onChange={(e) => {
+                setComment(e.target.value);
+                if (commentError) setCommentError(null);
+              }}
+              aria-invalid={commentError ? true : undefined}
+            />
+            {commentError && <p className="text-sm text-destructive">{commentError}</p>}
+          </div>
+          <div className="flex gap-3">
+            <Button
+              type="button"
+              variant="ghost"
+              size="lg"
+              className="h-11 rounded-[18px]"
+              onClick={() => setStep(1)}
+              disabled={pending}
+            >
+              Back
+            </Button>
+            <Button type="submit" size="lg" className="h-11 flex-1 rounded-[18px]" disabled={pending}>
               {pending ? "Sending..." : "Send"}
             </Button>
           </div>
