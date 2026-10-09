@@ -8,9 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "cn";
 import { RATING_EMOJI, RATING_LABEL } from "@/components/ui/rating-emoji";
+import { needsFeedback } from "@/lib/survey-flow";
 import { submitReview } from "./actions";
 
-const STEPS = ["Email", "Your feedback", "Google"];
+const STEPS = ["Email", "Your rating"];
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function ReviewForm({ locationSlug }: { locationSlug: string }) {
@@ -23,13 +24,13 @@ export function ReviewForm({ locationSlug }: { locationSlug: string }) {
   const [pending, setPending] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const qualifiesForShare = rating >= 4;
-  const stepCount = qualifiesForShare ? 3 : 2;
+  const feedbackRequired = needsFeedback(rating);
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (pending) return;
     if (step === 0) handleEmailNext();
-    else if (step === 1) handleOpinionNext();
+    else handleRatingSubmit();
   }
 
   function handleEmailNext() {
@@ -46,20 +47,27 @@ export function ReviewForm({ locationSlug }: { locationSlug: string }) {
     setStep(1);
   }
 
-  function handleOpinionNext() {
-    if (rating > 0 && rating <= 3 && comment.trim().length === 0) {
-      setCommentError("Tell us what happened so we can improve.");
+  function selectRating(value: number) {
+    setRating(value);
+    setSubmitError(null);
+    if (!needsFeedback(value)) {
+      // Happy ratings do not collect a comment: drop anything typed before.
+      setComment("");
+      setCommentError(null);
+    }
+  }
+
+  function handleRatingSubmit() {
+    if (rating === 0) return;
+    if (feedbackRequired && comment.trim().length === 0) {
+      setCommentError("Tell us what happened so we can follow up.");
       return;
     }
     setCommentError(null);
-    if (qualifiesForShare) {
-      setStep(2);
-      return;
-    }
-    void submit(false);
+    void submit();
   }
 
-  async function submit(sharedToGoogle: boolean) {
+  async function submit() {
     setPending(true);
     setSubmitError(null);
     try {
@@ -67,8 +75,8 @@ export function ReviewForm({ locationSlug }: { locationSlug: string }) {
       formData.set("locationSlug", locationSlug);
       formData.set("email", email.trim().toLowerCase());
       formData.set("rating", String(rating));
-      formData.set("comment", comment);
-      formData.set("sharedToGoogle", String(sharedToGoogle));
+      formData.set("comment", feedbackRequired ? comment : "");
+      formData.set("sharedToGoogle", "false");
       await submitReview(formData);
     } catch (err) {
       unstable_rethrow(err);
@@ -85,7 +93,7 @@ export function ReviewForm({ locationSlug }: { locationSlug: string }) {
       className="flex flex-col gap-5 rounded-[26px] bg-white p-6 border border-cool"
     >
       <div className="flex items-center justify-center gap-1" aria-label="Progress">
-        {STEPS.slice(0, stepCount).map((label, i) => (
+        {STEPS.map((label, i) => (
           <div key={label} className="flex items-center gap-1">
             {i > 0 && (
               <div className={cn("h-px w-6", i <= step ? "bg-amber" : "bg-ink/15")} />
@@ -142,7 +150,7 @@ export function ReviewForm({ locationSlug }: { locationSlug: string }) {
                 type="button"
                 aria-label={RATING_LABEL[value]}
                 aria-pressed={rating === value}
-                onClick={() => setRating(value)}
+                onClick={() => selectRating(value)}
                 className={cn(
                   "text-4xl transition-all grayscale opacity-40 hover:opacity-100 hover:grayscale-0",
                   rating === value && "opacity-100 grayscale-0 scale-125"
@@ -153,27 +161,31 @@ export function ReviewForm({ locationSlug }: { locationSlug: string }) {
             ))}
           </div>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="comment">
-              {commentRequired(rating) ? "Comment (required)" : "Comment (optional)"}
-            </Label>
-            <Textarea
-              id="comment"
-              name="comment"
-              placeholder={
-                commentRequired(rating)
-                  ? "Tell us what happened so we can improve"
-                  : "Tell us about your experience"
-              }
-              className="min-h-28"
-              value={comment}
-              onChange={(e) => {
-                setComment(e.target.value);
-                if (commentError) setCommentError(null);
-              }}
-              aria-invalid={commentError ? true : undefined}
-            />
-            {commentError && <p className="text-sm text-destructive">{commentError}</p>}
+          <div aria-live="polite">
+            {feedbackRequired && (
+              <div className="flex flex-col gap-3">
+                <p className="text-sm text-body text-center">
+                  We&apos;re sorry about your experience. Tell us what happened and we&apos;ll get
+                  back to you as soon as possible.
+                </p>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="comment">What happened? (required)</Label>
+                  <Textarea
+                    id="comment"
+                    name="comment"
+                    placeholder="Tell us what happened so we can make it right"
+                    className="min-h-28"
+                    value={comment}
+                    onChange={(e) => {
+                      setComment(e.target.value);
+                      if (commentError) setCommentError(null);
+                    }}
+                    aria-invalid={commentError ? true : undefined}
+                  />
+                  {commentError && <p className="text-sm text-destructive">{commentError}</p>}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-3">
@@ -183,6 +195,7 @@ export function ReviewForm({ locationSlug }: { locationSlug: string }) {
               size="lg"
               className="h-11 rounded-[18px]"
               onClick={() => setStep(0)}
+              disabled={pending}
             >
               Back
             </Button>
@@ -192,53 +205,13 @@ export function ReviewForm({ locationSlug }: { locationSlug: string }) {
               className="h-11 flex-1 rounded-[18px]"
               disabled={rating === 0 || pending}
             >
-              {qualifiesForShare ? "Continue" : pending ? "Sending..." : "Send"}
+              {pending ? "Sending..." : "Send"}
             </Button>
           </div>
-        </div>
-      )}
-
-      {step === 2 && (
-        <div className="flex flex-col gap-4">
-          <h2 className="text-lg font-semibold text-ink text-center">
-            Want to share your review on Google?
-          </h2>
-          <div className="flex flex-col gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              className="h-11 rounded-[18px]"
-              disabled={pending}
-              onClick={() => void submit(false)}
-            >
-              No, thanks
-            </Button>
-            <Button
-              type="button"
-              size="lg"
-              className="h-11 rounded-[18px]"
-              disabled={pending}
-              onClick={() => void submit(true)}
-            >
-              {pending ? "Sending..." : "Yes, share"}
-            </Button>
-          </div>
-          <button
-            type="button"
-            className="text-sm text-body underline underline-offset-2 self-center"
-            onClick={() => setStep(1)}
-          >
-            Back
-          </button>
         </div>
       )}
 
       {submitError && <p className="text-sm text-destructive text-center">{submitError}</p>}
     </form>
   );
-}
-
-function commentRequired(rating: number) {
-  return rating > 0 && rating <= 3;
 }
