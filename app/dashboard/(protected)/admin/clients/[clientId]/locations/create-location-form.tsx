@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createLocationAction } from "../actions";
+import { createLocationAction } from "@/app/dashboard/(protected)/admin/actions";
 
 export function CreateLocationForm({ clientId, clientSlug }: { clientId: string; clientSlug: string }) {
   const [state, formAction, pending] = useActionState(createLocationAction, null);

@@ -4,8 +4,8 @@ import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CredentialsNotice } from "../credentials-notice";
-import { createUserAction } from "../actions";
+import { CredentialsNotice } from "@/app/dashboard/(protected)/admin/credentials-notice";
+import { createUserAction } from "@/app/dashboard/(protected)/admin/actions";
 
 export function CreateUserForm({
   clientId,

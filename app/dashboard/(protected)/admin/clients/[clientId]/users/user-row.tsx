@@ -3,9 +3,9 @@
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ConfirmSubmitButton } from "../confirm-submit-button";
-import { CredentialsNotice } from "../credentials-notice";
-import { deleteUserAction, resetPasswordAction } from "../actions";
+import { ConfirmSubmitButton } from "@/app/dashboard/(protected)/admin/confirm-submit-button";
+import { CredentialsNotice } from "@/app/dashboard/(protected)/admin/credentials-notice";
+import { deleteUserAction, resetPasswordAction } from "@/app/dashboard/(protected)/admin/actions";
 
 export function UserRow({
   user,

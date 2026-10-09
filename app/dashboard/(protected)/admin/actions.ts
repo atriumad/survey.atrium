@@ -31,6 +31,7 @@ export async function createClientAction(_prev: ActionResult | null, formData: F
   const { error } = await admin.from("clients").insert(parsed.data);
   if (error) return fail(describeDbError(error, "Could not create client."));
 
+  revalidatePath(`${ADMIN_PATH}/clients`);
   revalidatePath(ADMIN_PATH);
   return { ok: true, data: null };
 }
@@ -55,7 +56,7 @@ export async function createLocationAction(_prev: ActionResult | null, formData:
   });
   if (error) return fail(describeDbError(error, "Could not create location."));
 
-  revalidatePath(`${ADMIN_PATH}/${clientId}`);
+  revalidatePath(`${ADMIN_PATH}/clients/${clientId}`, "layout");
   return { ok: true, data: null };
 }
 
@@ -111,7 +112,7 @@ export async function createUserAction(
     return fail(describeDbError(profileError, "Could not create user."));
   }
 
-  revalidatePath(`${ADMIN_PATH}/${clientId}`);
+  revalidatePath(`${ADMIN_PATH}/clients/${clientId}`, "layout");
   return { ok: true, data: { email, password } };
 }
 

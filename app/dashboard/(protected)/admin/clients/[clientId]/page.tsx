@@ -14,24 +14,25 @@ export default async function ClientSummaryPage({
   searchParams,
 }: {
   params: Promise<{ clientId: string }>;
-  searchParams: Promise<{ location?: string }>;
+  searchParams: Promise<{ location?: string | string[] }>;
 }) {
   await requireSuperadmin();
   const { clientId } = await params;
   const { location } = await searchParams;
   if (!z.uuid().safeParse(clientId).success) notFound();
+  const locationId = typeof location === "string" && z.uuid().safeParse(location).success ? location : undefined;
 
   const admin = createAdminClient();
   const { data: locations, error } = await admin.from("locations").select("id, name").eq("client_id", clientId);
   if (error) throw error;
 
   // A location id from another client matches nothing: the loader also filters by client_id.
-  const data = await loadOverviewData(admin, { clientId, locationId: location });
+  const data = await loadOverviewData(admin, { clientId, locationId });
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between gap-4">
-        <p className="text-sm text-body">{describeLocationScope("admin", location, locations ?? [])}</p>
+        <p className="text-sm text-body">{describeLocationScope("admin", locationId, locations ?? [])}</p>
         {(locations ?? []).length > 0 && <LocationFilter locations={locations ?? []} />}
       </div>
       <OverviewView data={data} />
