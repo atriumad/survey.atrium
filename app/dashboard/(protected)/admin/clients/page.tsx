@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "../../page-header";
 import { CreateClientForm } from "./create-client-form";
+import { DeleteClientForm } from "./delete-client-form";
 
 export const dynamic = "force-dynamic";
 
@@ -43,21 +44,32 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
       ) : (
         <div className="flex flex-col gap-3">
           {clients.map((c) => (
-            <Link key={c.id} href={`/dashboard/admin/clients/${c.id}`}>
-              <Card size="sm" className="p-4">
-                <CardContent className="p-0 flex items-center justify-between gap-4">
-                  <div>
-                    <p className="font-medium text-ink">{c.name}</p>
-                    <p className="text-sm text-body">{c.slug}</p>
-                  </div>
+            <Card key={c.id} size="sm" className="p-4">
+              <CardContent className="p-0 flex items-start justify-between gap-4">
+                <Link href={`/dashboard/admin/clients/${c.id}`} className="flex-1 min-w-0">
+                  <p className="font-medium text-ink">{c.name}</p>
+                  <p className="text-sm text-body">{c.slug}</p>
+                </Link>
+                <div className="flex flex-col items-end gap-2">
                   <p className="text-sm text-body text-right">
                     {c.locationsCount} locations · {c.usersCount} users
                     <br />
                     {c.lastReviewAt ? `Last review ${new Date(c.lastReviewAt).toLocaleDateString()}` : "No reviews yet"}
                   </p>
-                </CardContent>
-              </Card>
-            </Link>
+                  <details className="text-sm w-full max-w-md">
+                    <summary
+                      aria-label={`Delete ${c.name}`}
+                      className="cursor-pointer text-right text-body hover:text-ink"
+                    >
+                      Delete
+                    </summary>
+                    <div className="mt-3">
+                      <DeleteClientForm clientId={c.id} slug={c.slug} />
+                    </div>
+                  </details>
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       )}

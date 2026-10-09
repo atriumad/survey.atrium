@@ -3,7 +3,7 @@ import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireSuperadmin } from "@/lib/superadmin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DeleteClientForm } from "./delete-client-form";
+import { DeleteClientForm } from "@/app/dashboard/(protected)/admin/clients/delete-client-form";
 import { RenameClientForm } from "./rename-client-form";
 
 export const dynamic = "force-dynamic";

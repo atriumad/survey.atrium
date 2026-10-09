@@ -17,8 +17,8 @@ export function DeleteClientForm({ clientId, slug }: { clientId: string; slug: s
         <span className="font-mono text-ink">{slug}</span>.
       </p>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="confirm-slug">Client slug</Label>
-        <Input id="confirm-slug" name="confirmSlug" autoComplete="off" required />
+        <Label htmlFor={`confirm-slug-${clientId}`}>Client slug</Label>
+        <Input id={`confirm-slug-${clientId}`} name="confirmSlug" autoComplete="off" required />
       </div>
       <div>
         <Button type="submit" variant="destructive" disabled={pending}>Delete client</Button>
