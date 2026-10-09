@@ -254,11 +254,20 @@ export async function deleteClientAction(_prev: ActionResult | null, formData: F
 const LOGO_BUCKET = "client-logos";
 
 // Public URLs look like <base>/storage/v1/object/public/client-logos/<path>.
-function logoPathFromUrl(url: string | null | undefined): string | null {
+// Only paths inside the client's own folder are returned, so a tampered url can never delete another object.
+function logoPathFromUrl(url: string | null | undefined, clientId: string): string | null {
   if (!url) return null;
   const marker = `/${LOGO_BUCKET}/`;
   const index = url.indexOf(marker);
-  return index === -1 ? null : url.slice(index + marker.length);
+  if (index === -1) return null;
+  const path = url.slice(index + marker.length);
+  if (path.includes("..")) return null;
+  return new RegExp(`^${clientId}/[A-Za-z0-9._-]+$`).test(path) ? path : null;
+}
+
+async function removeLogoObject(storage: { remove: (paths: string[]) => PromiseLike<{ error: { message: string } | null }> }, path: string) {
+  const { error } = await storage.remove([path]);
+  if (error) console.error("client logo cleanup failed", error.message);
 }
 
 export async function uploadClientLogoAction(
@@ -288,12 +297,12 @@ export async function uploadClientLogoAction(
   const url = storage.getPublicUrl(path).data.publicUrl;
   const { error: updateError } = await admin.from("clients").update({ logo_url: url }).eq("id", clientId as string);
   if (updateError) {
-    await storage.remove([path]); // do not leave an orphaned object
+    await removeLogoObject(storage, path); // do not leave an orphaned object
     return fail("Could not save the logo.");
   }
 
-  const previous = logoPathFromUrl(client.logo_url);
-  if (previous && previous !== path) await storage.remove([previous]);
+  const previous = logoPathFromUrl(client.logo_url, clientId as string);
+  if (previous && previous !== path) await removeLogoObject(storage, previous);
 
   revalidatePath(`${ADMIN_PATH}/clients/${clientId}`, "layout");
   return { ok: true, data: { url } };
@@ -312,8 +321,8 @@ export async function removeClientLogoAction(_prev: ActionResult | null, formDat
   const { error } = await admin.from("clients").update({ logo_url: null }).eq("id", clientId as string);
   if (error) return fail("Could not remove the logo.");
 
-  const path = logoPathFromUrl(client.logo_url);
-  if (path) await admin.storage.from(LOGO_BUCKET).remove([path]);
+  const path = logoPathFromUrl(client.logo_url, clientId as string);
+  if (path) await removeLogoObject(admin.storage.from(LOGO_BUCKET), path);
 
   revalidatePath(`${ADMIN_PATH}/clients/${clientId}`, "layout");
   return { ok: true, data: null };

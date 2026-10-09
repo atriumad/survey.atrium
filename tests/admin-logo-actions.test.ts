@@ -133,6 +133,30 @@ describe("uploadClientLogoAction", () => {
     expect(admin.events).toEqual([`upload:${admin.uploads[0].path}`, `remove:${admin.uploads[0].path}`]);
   });
 
+  it("keeps the previous logo when the database update fails", async () => {
+    const admin = fakeAdmin({ currentLogo: `${PUBLIC_BASE}${CLIENT_ID}/old.png`, updateError: true });
+    const result = await uploadClientLogoAction(null, formWith(new File([PNG], "a.png", { type: "image/png" })));
+    expect(result.ok).toBe(false);
+    expect(admin.events).toEqual([`upload:${admin.uploads[0].path}`, `remove:${admin.uploads[0].path}`]);
+  });
+
+  it("ignores a logo url that points outside the client's folder", async () => {
+    const admin = fakeAdmin({ currentLogo: `${PUBLIC_BASE}other-client/x.png` });
+    const result = await uploadClientLogoAction(null, formWith(new File([PNG], "a.png", { type: "image/png" })));
+    expect(result.ok).toBe(true);
+    expect(admin.events).toEqual([`upload:${admin.uploads[0].path}`]);
+  });
+
+  it("logs and survives a failed cleanup", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const admin = fakeAdmin({ currentLogo: `${PUBLIC_BASE}${CLIENT_ID}/old.png` });
+    admin.storageApi.remove.mockResolvedValueOnce({ data: [], error: { message: "boom" } } as never);
+    const result = await uploadClientLogoAction(null, formWith(new File([PNG], "a.png", { type: "image/png" })));
+    expect(result.ok).toBe(true);
+    expect(spy).toHaveBeenCalledWith("client logo cleanup failed", "boom");
+    spy.mockRestore();
+  });
+
   it("fails cleanly when the upload itself fails", async () => {
     const admin = fakeAdmin({ uploadError: true });
     const result = await uploadClientLogoAction(null, formWith(new File([PNG], "a.png", { type: "image/png" })));
@@ -158,6 +182,13 @@ describe("removeClientLogoAction", () => {
     expect(await removeClientLogoAction(null, formWith(null))).toEqual({ ok: true, data: null });
     expect(admin.updates).toEqual([{ logo_url: null }]);
     expect(admin.events).toEqual([`remove:${CLIENT_ID}/logo.png`]);
+  });
+
+  it("does not delete anything for a crafted url that escapes the client's folder", async () => {
+    const admin = fakeAdmin({ currentLogo: `${PUBLIC_BASE}${CLIENT_ID}/../evil.png` });
+    expect(await removeClientLogoAction(null, formWith(null))).toEqual({ ok: true, data: null });
+    expect(admin.updates).toEqual([{ logo_url: null }]);
+    expect(admin.events).toEqual([]);
   });
 
   it("is a no-op success when there is no logo", async () => {

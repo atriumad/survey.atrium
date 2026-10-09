@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LOGO_MAX_BYTES } from "@/lib/image-type";
 import {
   removeClientLogoAction,
   uploadClientLogoAction,
@@ -37,7 +38,13 @@ export function LogoCard({
         <input type="hidden" name="clientId" value={clientId} />
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="logo-file">Logo (PNG, JPG or WebP, up to 2 MB)</Label>
-          <Input id="logo-file" name="file" type="file" accept="image/png,image/jpeg,image/webp" required />
+          <Input id="logo-file" name="file" type="file" accept="image/png,image/jpeg,image/webp"
+            required
+            onChange={(e) => {
+              const file = e.currentTarget.files?.[0];
+              e.currentTarget.setCustomValidity(file && file.size > LOGO_MAX_BYTES ? "The image must be 2 MB or smaller." : "");
+            }}
+          />
         </div>
         <Button type="submit" disabled={uploading}>Upload</Button>
       </form>

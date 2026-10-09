@@ -41,12 +41,12 @@ export default async function ReviewPage({
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-6 gap-6 bg-cream">
-      <header className="flex flex-col items-center gap-2 text-center">
+      <header className="flex flex-col items-center gap-2 text-center break-words">
         {location.client_logo_url && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={location.client_logo_url}
-            alt={restaurantName ?? location.name}
+            alt=""
             className="max-h-16 w-auto object-contain"
           />
         )}
