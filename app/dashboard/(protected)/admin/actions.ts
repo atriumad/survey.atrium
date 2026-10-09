@@ -7,6 +7,8 @@ import { requireSuperadmin } from "@/lib/superadmin";
 import { generatePassword } from "@/lib/passwords";
 import { describeDbError } from "@/lib/db-errors";
 import type { ActionResult } from "@/lib/action-result";
+import { LOGO_EXTENSIONS, LOGO_MAX_BYTES, detectImageType } from "@/lib/image-type";
+import { z } from "zod";
 import {
   adminLocationFormSchema,
   clientDeleteSchema,
@@ -247,4 +249,72 @@ export async function deleteClientAction(_prev: ActionResult | null, formData: F
 
   revalidatePath(ADMIN_PATH, "layout");
   redirect(`${ADMIN_PATH}/clients`);
+}
+
+const LOGO_BUCKET = "client-logos";
+
+// Public URLs look like <base>/storage/v1/object/public/client-logos/<path>.
+function logoPathFromUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const marker = `/${LOGO_BUCKET}/`;
+  const index = url.indexOf(marker);
+  return index === -1 ? null : url.slice(index + marker.length);
+}
+
+export async function uploadClientLogoAction(
+  _prev: ActionResult<{ url: string }> | null,
+  formData: FormData
+): Promise<ActionResult<{ url: string }>> {
+  await requireSuperadmin();
+  const clientId = formData.get("clientId");
+  if (!z.uuid().safeParse(clientId).success) return fail("Invalid client.");
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) return fail("Choose an image to upload.");
+  if (file.size > LOGO_MAX_BYTES) return fail("The image must be 2 MB or smaller.");
+
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const mime = detectImageType(bytes);
+  if (!mime) return fail("Upload a PNG, JPG or WebP image.");
+
+  const admin = createAdminClient();
+  const { data: client } = await admin.from("clients").select("logo_url").eq("id", clientId as string).maybeSingle();
+  if (!client) return fail("Client not found.");
+
+  const path = `${clientId}/${Date.now()}.${LOGO_EXTENSIONS[mime]}`;
+  const storage = admin.storage.from(LOGO_BUCKET);
+  const { error: uploadError } = await storage.upload(path, bytes, { contentType: mime, upsert: false });
+  if (uploadError) return fail("Could not upload the logo.");
+
+  const url = storage.getPublicUrl(path).data.publicUrl;
+  const { error: updateError } = await admin.from("clients").update({ logo_url: url }).eq("id", clientId as string);
+  if (updateError) {
+    await storage.remove([path]); // do not leave an orphaned object
+    return fail("Could not save the logo.");
+  }
+
+  const previous = logoPathFromUrl(client.logo_url);
+  if (previous && previous !== path) await storage.remove([previous]);
+
+  revalidatePath(`${ADMIN_PATH}/clients/${clientId}`, "layout");
+  return { ok: true, data: { url } };
+}
+
+export async function removeClientLogoAction(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  await requireSuperadmin();
+  const clientId = formData.get("clientId");
+  if (!z.uuid().safeParse(clientId).success) return fail("Invalid client.");
+
+  const admin = createAdminClient();
+  const { data: client } = await admin.from("clients").select("logo_url").eq("id", clientId as string).maybeSingle();
+  if (!client) return fail("Client not found.");
+  if (!client.logo_url) return { ok: true, data: null };
+
+  const { error } = await admin.from("clients").update({ logo_url: null }).eq("id", clientId as string);
+  if (error) return fail("Could not remove the logo.");
+
+  const path = logoPathFromUrl(client.logo_url);
+  if (path) await admin.storage.from(LOGO_BUCKET).remove([path]);
+
+  revalidatePath(`${ADMIN_PATH}/clients/${clientId}`, "layout");
+  return { ok: true, data: null };
 }
