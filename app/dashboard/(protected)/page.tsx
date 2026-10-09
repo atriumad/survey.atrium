@@ -8,6 +8,7 @@ import {
 } from "@/lib/metrics";
 import { LocationFilter } from "./location-filter";
 import { PageHeader } from "./page-header";
+import { describeLocationScope } from "@/lib/location-label";
 import { ReviewsTable } from "./reviews/reviews-table";
 import { RatingEmoji } from "@/components/ui/rating-emoji";
 import { Card, CardContent } from "@/components/ui/card";
@@ -101,6 +102,7 @@ export default async function DashboardHomePage({
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Overview"
+        description={describeLocationScope(profile.role, effectiveLocation, locations ?? [])}
         actions={profile.role === "admin" && <LocationFilter locations={locations ?? []} />}
       />
 
@@ -122,17 +124,19 @@ export default async function DashboardHomePage({
       </div>
 
       <div className="flex flex-col gap-3">
-        <h2 className="text-xs uppercase tracking-wide font-semibold text-body">Star distribution</h2>
+        <h2 className="text-xs uppercase tracking-wide font-semibold text-body">Rating distribution</h2>
         <div className="rounded-[26px] bg-white border border-cool p-5 flex flex-col gap-3">
-          {([5, 4, 3, 2, 1] as const).map((star) => {
-            const count = summary.starDistribution[star];
+          {([5, 4, 3, 2, 1] as const).map((level) => {
+            const count = summary.starDistribution[level];
             const pct = summary.total > 0 ? Math.round((count / summary.total) * 100) : 0;
             return (
-              <div key={star} className="flex items-center gap-3">
-                <span className="w-8 text-sm font-medium text-ink shrink-0">{star}★</span>
+              <div key={level} className="flex items-center gap-3">
+                <span className="w-8 shrink-0">
+                  <RatingEmoji rating={level} size="sm" />
+                </span>
                 <div className="flex-1 h-3 rounded-full bg-cool overflow-hidden">
                   <div
-                    className={`h-full rounded-full ${star <= 3 ? "bg-amber" : "bg-green-fill"}`}
+                    className={`h-full rounded-full ${level <= 3 ? "bg-amber" : "bg-green-fill"}`}
                     style={{ width: `${pct}%` }}
                   />
                 </div>

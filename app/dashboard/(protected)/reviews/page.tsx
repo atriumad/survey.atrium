@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getTenantProfile } from "@/lib/get-profile";
+import { describeLocationScope } from "@/lib/location-label";
 import { ExportButton, ReviewsTable } from "./reviews-table";
 import { ReviewsPager } from "./pager";
 import { LocationFilter } from "../location-filter";
@@ -75,6 +76,7 @@ export default async function ReviewsPage({
     <div className="flex flex-col gap-4">
       <PageHeader
         title="Reviews"
+        description={describeLocationScope(profile.role, effectiveLocation, locations ?? [])}
         actions={
           <div className="flex items-center gap-2">
             {profile.role === "admin" && <LocationFilter locations={locations ?? []} />}

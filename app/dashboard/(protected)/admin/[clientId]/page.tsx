@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireSuperadmin } from "@/lib/superadmin";
+import { getSiteUrl } from "@/lib/site-url";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfirmSubmitButton } from "../confirm-submit-button";
@@ -10,6 +11,7 @@ import { PageHeader } from "../../page-header";
 import { deleteLocationAction } from "../actions";
 import { CreateLocationForm } from "./create-location-form";
 import { CreateUserForm } from "./create-user-form";
+import { LocationQr } from "./location-qr";
 import { UserRow } from "./user-row";
 
 export const dynamic = "force-dynamic";
@@ -34,6 +36,7 @@ export default async function AdminClientPage({ params }: { params: Promise<{ cl
   if (profilesError) throw profilesError;
   if (!client) notFound();
 
+  const siteUrl = getSiteUrl();
   const locationNames = new Map((locations ?? []).map((l) => [l.id, l.name]));
   const users = await Promise.all(
     (profiles ?? []).map(async (p) => {
@@ -73,9 +76,9 @@ export default async function AdminClientPage({ params }: { params: Promise<{ cl
         {(locations ?? []).map((l) => (
           <Card key={l.id} size="sm" className="p-4">
             <CardContent className="p-0 flex items-center gap-4">
-              <div className="flex-1">
+              <div className="flex-1 flex flex-col gap-3">
                 <p className="font-medium text-ink">{l.name}</p>
-                <p className="text-sm text-body">/r/{l.slug}</p>
+                <LocationQr baseUrl={siteUrl} slug={l.slug} name={l.name} />
               </div>
               <form action={deleteLocationAction}>
                 <input type="hidden" name="locationId" value={l.id} />
