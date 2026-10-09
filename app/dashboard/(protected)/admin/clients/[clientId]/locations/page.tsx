@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfirmSubmitButton } from "@/app/dashboard/(protected)/admin/confirm-submit-button";
 import { deleteLocationAction } from "@/app/dashboard/(protected)/admin/actions";
 import { CreateLocationForm } from "./create-location-form";
+import { EditLocationForm } from "./edit-location-form";
 import { LocationQr } from "./location-qr";
 
 export const dynamic = "force-dynamic";
@@ -52,6 +53,7 @@ export default async function ClientLocationsPage({ params }: { params: Promise<
               <div className="flex-1 flex flex-col gap-3">
                 <p className="font-medium text-ink">{l.name}</p>
                 <LocationQr baseUrl={siteUrl} slug={l.slug} name={l.name} />
+                <EditLocationForm locationId={l.id} name={l.name} googleReviewUrl={l.google_review_url} />
               </div>
               <form action={deleteLocationAction}>
                 <input type="hidden" name="locationId" value={l.id} />

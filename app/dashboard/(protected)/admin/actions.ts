@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireSuperadmin } from "@/lib/superadmin";
 import { generatePassword } from "@/lib/passwords";
@@ -8,7 +9,10 @@ import { describeDbError } from "@/lib/db-errors";
 import type { ActionResult } from "@/lib/action-result";
 import {
   adminLocationFormSchema,
+  clientDeleteSchema,
   clientFormSchema,
+  clientUpdateSchema,
+  locationUpdateSchema,
   userFormSchema,
   userIdSchema,
 } from "@/lib/validation";
@@ -164,4 +168,83 @@ export async function deleteLocationAction(formData: FormData): Promise<void> {
   const { error } = await admin.from("locations").delete().eq("id", locationId);
   if (error) throw new Error("Could not delete location.");
   revalidatePath(ADMIN_PATH, "layout");
+}
+
+export async function updateClientAction(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  await requireSuperadmin();
+  const parsed = clientUpdateSchema.safeParse({
+    clientId: formData.get("clientId"),
+    name: formData.get("name"),
+    slug: formData.get("slug"),
+  });
+  if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Invalid client.");
+
+  const { clientId, name, slug } = parsed.data;
+  const admin = createAdminClient();
+  const { error } = await admin.from("clients").update({ name, slug }).eq("id", clientId);
+  if (error) return fail(describeDbError(error, "Could not update client."));
+
+  revalidatePath(ADMIN_PATH, "layout");
+  return { ok: true, data: null };
+}
+
+export async function updateLocationAction(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  await requireSuperadmin();
+  const parsed = locationUpdateSchema.safeParse({
+    locationId: formData.get("locationId"),
+    name: formData.get("name"),
+    googleReviewUrl: formData.get("googleReviewUrl") ?? "",
+  });
+  if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Invalid location.");
+
+  const { locationId, name, googleReviewUrl } = parsed.data;
+  const admin = createAdminClient();
+  const { data: location } = await admin.from("locations").select("client_id").eq("id", locationId).maybeSingle();
+  if (!location) return fail("Location not found.");
+
+  // The slug is deliberately not updatable: printed QR codes point at it.
+  const { error } = await admin
+    .from("locations")
+    .update({ name, google_review_url: googleReviewUrl })
+    .eq("id", locationId);
+  if (error) return fail(describeDbError(error, "Could not update location."));
+
+  revalidatePath(`${ADMIN_PATH}/clients/${location.client_id}`, "layout");
+  return { ok: true, data: null };
+}
+
+export async function deleteClientAction(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  await requireSuperadmin();
+  const parsed = clientDeleteSchema.safeParse({
+    clientId: formData.get("clientId"),
+    confirmSlug: formData.get("confirmSlug") ?? "",
+  });
+  if (!parsed.success) return fail("Invalid request.");
+
+  const { clientId, confirmSlug } = parsed.data;
+  const admin = createAdminClient();
+  const { data: client } = await admin.from("clients").select("slug").eq("id", clientId).maybeSingle();
+  if (!client) return fail("Client not found.");
+  if (confirmSlug !== client.slug) return fail("Type the client slug exactly to confirm.");
+
+  // Remove the logins first: deleting the client row would orphan them.
+  const { data: profiles, error: profilesError } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("client_id", clientId);
+  if (profilesError) return fail("Could not read the client's users.");
+
+  for (const profile of profiles ?? []) {
+    const { error } = await admin.auth.admin.deleteUser(profile.id);
+    if (error) {
+      console.error("deleteClientAction: could not delete user", profile.id, error.message);
+      return fail("Could not delete one of the client's users. The client was not deleted.");
+    }
+  }
+
+  const { error: deleteError } = await admin.from("clients").delete().eq("id", clientId);
+  if (deleteError) return fail(describeDbError(deleteError, "Could not delete client."));
+
+  revalidatePath(ADMIN_PATH, "layout");
+  redirect(`${ADMIN_PATH}/clients`);
 }

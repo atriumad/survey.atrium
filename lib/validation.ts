@@ -65,3 +65,18 @@ export const userFormSchema = z
   });
 
 export const userIdSchema = z.object({ userId: z.uuid() });
+
+export const clientUpdateSchema = clientFormSchema.extend({ clientId: z.uuid() });
+
+export const locationUpdateSchema = locationFormSchema
+  .pick({ name: true, googleReviewUrl: true })
+  .extend({ locationId: z.uuid() });
+
+export const clientDeleteSchema = z.object({
+  clientId: z.uuid(),
+  confirmSlug: z
+    .string()
+    .trim()
+    .max(100)
+    .transform((v) => v.toLowerCase()),
+});
