@@ -2001,3 +2001,78 @@ Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
 2. Open a client: Summary, Locations (QR, edit, delete with confirm), Users (create, reset, delete), Reviews (filter by location, paging), Settings (rename; wrong slug on delete is refused).
 3. As a client admin and as a manager: Overview and Reviews look and behave exactly as before; `/dashboard/admin/clients` redirects away.
 4. Open `/dashboard/admin/clients/<clientA>?location=<locationOfClientB>`: Summary shows no data for A (nothing from B).
+
+---
+
+### Task 7: Delete a client from the clients list (typed-slug confirmation)
+
+Added after user feedback: the user wants to delete clients from the list like locations, but safely.
+
+**Files:**
+- Move: `app/dashboard/(protected)/admin/clients/[clientId]/settings/delete-client-form.tsx` → `app/dashboard/(protected)/admin/clients/delete-client-form.tsx` (`git mv`)
+- Modify: the moved `delete-client-form.tsx` (unique ids)
+- Modify: `app/dashboard/(protected)/admin/clients/[clientId]/settings/page.tsx` (import path)
+- Modify: `app/dashboard/(protected)/admin/clients/page.tsx` (row layout + delete control)
+
+**Interfaces:**
+- Consumes: `DeleteClientForm({ clientId, slug })` and `deleteClientAction` (Task 5; redirects to `/dashboard/admin/clients` on success).
+- Produces: a **Delete** control on every client row that reveals the typed-slug confirmation form.
+
+- [ ] **Step 1: Share the form and make its ids unique**
+
+```bash
+git mv "app/dashboard/(protected)/admin/clients/[clientId]/settings/delete-client-form.tsx" "app/dashboard/(protected)/admin/clients/delete-client-form.tsx"
+```
+
+In the moved file, give the input a per-client id so several forms can coexist on one page: replace `htmlFor="confirm-slug"` and `id="confirm-slug"` with `htmlFor={`confirm-slug-${clientId}`}` and `id={`confirm-slug-${clientId}`}`. Nothing else changes.
+
+In `settings/page.tsx` change the import to `import { DeleteClientForm } from "@/app/dashboard/(protected)/admin/clients/delete-client-form";`.
+
+- [ ] **Step 2: Clients list rows**
+
+A `<details>` inside an `<a>` is invalid, so the row can no longer be a single link. In `admin/clients/page.tsx` add `import { DeleteClientForm } from "./delete-client-form";` and replace the `clients.map(...)` row markup with:
+
+```tsx
+          {clients.map((c) => (
+            <Card key={c.id} size="sm" className="p-4">
+              <CardContent className="p-0 flex items-start justify-between gap-4">
+                <Link href={`/dashboard/admin/clients/${c.id}`} className="flex-1 min-w-0">
+                  <p className="font-medium text-ink">{c.name}</p>
+                  <p className="text-sm text-body">{c.slug}</p>
+                </Link>
+                <div className="flex flex-col items-end gap-2">
+                  <p className="text-sm text-body text-right">
+                    {c.locationsCount} locations · {c.usersCount} users
+                    <br />
+                    {c.lastReviewAt ? `Last review ${new Date(c.lastReviewAt).toLocaleDateString()}` : "No reviews yet"}
+                  </p>
+                  <details className="text-sm w-full max-w-md">
+                    <summary
+                      aria-label={`Delete ${c.name}`}
+                      className="cursor-pointer text-right text-body hover:text-ink"
+                    >
+                      Delete
+                    </summary>
+                    <div className="mt-3">
+                      <DeleteClientForm clientId={c.id} slug={c.slug} />
+                    </div>
+                  </details>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+```
+
+- [ ] **Step 3: Verify**
+
+Run: `npx tsc --noEmit && npm test && npx eslint "app/dashboard/(protected)" lib tests components`
+Expected: clean (two accepted `<img>` warnings). `grep -rn "confirm-slug\"" app` must return nothing (no fixed id left).
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add -A "app/dashboard/(protected)/admin/clients"
+git commit -m "feat: delete a client from the clients list with typed-slug confirmation
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
+```
