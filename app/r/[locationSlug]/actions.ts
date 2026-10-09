@@ -1,6 +1,6 @@
 "use server";
 
-import { redirect } from "next/navigation";
+import { redirect, RedirectType } from "next/navigation";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
@@ -47,14 +47,15 @@ export async function submitReview(formData: FormData) {
     throw new Error("Please wait a moment before submitting another review");
   }
 
-  const { locationSlug, email, rating, comment, sharedToGoogle } = parsed.data;
+  const { locationSlug, email, rating, comment } = parsed.data;
 
   const { data, error } = await supabase.rpc("submit_review", {
     p_location_slug: locationSlug,
     p_rating: rating,
     p_comment: comment,
     p_email: email,
-    p_requested_google: sharedToGoogle,
+    // The client no longer sends a share choice; only markSharedToGoogle sets the flag.
+    p_requested_google: false,
   });
 
   if (error) {
@@ -71,22 +72,27 @@ export async function submitReview(formData: FormData) {
     throw new Error("Could not save review");
   }
 
-  redirect(`/r/${locationSlug}/t?c=${row.classification}&r=${row.review_id}`);
+  redirect(`/r/${locationSlug}/t?c=${row.classification}&r=${row.review_id}`, RedirectType.replace);
 }
+
 // Called when the visitor clicks "Leave a Google review". Best effort: it must
 // never block the link or surface an error to the visitor.
 export async function markSharedToGoogle(reviewId: string): Promise<void> {
   if (!z.uuid().safeParse(reviewId).success) return;
 
-  const headersList = await headers();
-  const supabase = await createClient();
-  const allowed = await consumeRateLimit(
-    supabase,
-    buildRateLimitKey(getRequestIp(headersList), "share-click"),
-    SHARE_CLICK_POLICY
-  );
-  if (!allowed) return;
+  try {
+    const headersList = await headers();
+    const supabase = await createClient();
+    const allowed = await consumeRateLimit(
+      supabase,
+      buildRateLimitKey(getRequestIp(headersList), "share-click"),
+      SHARE_CLICK_POLICY
+    );
+    if (!allowed) return;
 
-  const { error } = await supabase.rpc("mark_review_shared", { p_review_id: reviewId });
-  if (error) console.error("mark_review_shared failed", error);
+    const { error } = await supabase.rpc("mark_review_shared", { p_review_id: reviewId });
+    if (error) console.error("mark_review_shared failed", error);
+  } catch (err) {
+    console.error("markSharedToGoogle failed", err);
+  }
 }

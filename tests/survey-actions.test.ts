@@ -51,4 +51,12 @@ describe("markSharedToGoogle", () => {
     expect(spy).toHaveBeenCalled();
     spy.mockRestore();
   });
+
+  it("never throws when createClient rejects", async () => {
+    vi.mocked(createClient).mockRejectedValue(new Error("boom"));
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    await expect(markSharedToGoogle(REVIEW_ID)).resolves.toBeUndefined();
+    expect(spy).toHaveBeenCalled();
+    spy.mockRestore();
+  });
 });

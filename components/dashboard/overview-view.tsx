@@ -18,7 +18,7 @@ export function OverviewView({ data }: { data: OverviewData }) {
         />
         <MetricCard label="Total reviews" value={summary.total} />
         <MetricCard label="% Good" value={`${summary.goodPercent}%`} />
-        <MetricCard label="% Shared to Google" value={`${summary.sharedPercent}%`} />
+        <MetricCard label="% Clicked Google review" value={`${summary.sharedPercent}%`} />
         <MetricCard label="QR Scans" value={scansTotal} />
         <MetricCard
           label="Conversion"

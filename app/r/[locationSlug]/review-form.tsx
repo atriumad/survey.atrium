@@ -81,7 +81,6 @@ export function ReviewForm({ locationSlug }: { locationSlug: string }) {
     } catch (err) {
       unstable_rethrow(err);
       setSubmitError(err instanceof Error ? err.message : "We couldn't save your review.");
-    } finally {
       setPending(false);
     }
   }
