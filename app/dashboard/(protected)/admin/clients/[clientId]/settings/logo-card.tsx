@@ -20,7 +20,7 @@ export function LogoCard({
 }) {
   const [uploadState, uploadAction, uploading] = useActionState(uploadClientLogoAction, null);
   const [removeState, removeAction, removing] = useActionState(removeClientLogoAction, null);
-  const shownUrl = uploadState?.ok ? uploadState.data.url : removeState?.ok ? null : logoUrl;
+  const shownUrl = logoUrl;
 
   return (
     <div className="flex flex-col gap-4">
@@ -42,7 +42,7 @@ export function LogoCard({
         <Button type="submit" disabled={uploading}>Upload</Button>
       </form>
       {uploadState && !uploadState.ok && <p role="alert" className="text-sm text-red-600">{uploadState.error}</p>}
-      {uploadState?.ok && <p role="status" className="text-sm text-body">Logo updated.</p>}
+      {uploadState?.ok && logoUrl && <p role="status" className="text-sm text-body">Logo updated.</p>}
 
       {shownUrl && (
         <form action={removeAction}>
