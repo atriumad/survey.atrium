@@ -5,6 +5,11 @@ if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
   connectSrc.push(process.env.NEXT_PUBLIC_SUPABASE_URL);
 }
 
+const imgSrc = ["'self'", "data:", "blob:"];
+if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  imgSrc.push(process.env.NEXT_PUBLIC_SUPABASE_URL);
+}
+
 const scriptSrc = ["'self'", "'unsafe-inline'"];
 // React dev mode uses eval() for debugging features like source-aware callstacks.
 // Production builds never eval, so keep 'unsafe-eval' out of the prod CSP.
@@ -24,7 +29,7 @@ const securityHeaders = [
       "default-src 'self'",
       `script-src ${scriptSrc.join(" ")}`,
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob:",
+      `img-src ${imgSrc.join(" ")}`,
       "font-src 'self' data:",
       `connect-src ${connectSrc.join(" ")}`,
       "object-src 'none'",
@@ -40,6 +45,8 @@ const nextConfig: NextConfig = {
   // Skip Next.js's auto-generated AGENTS.md/CLAUDE.md agent-rules files;
   // this repo manages its own agent docs under .superpowers/.
   agentRules: false,
+  // Logo uploads are up to 2 MB; the default Server Actions body limit is 1 MB.
+  experimental: { serverActions: { bodySizeLimit: "3mb" } },
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
