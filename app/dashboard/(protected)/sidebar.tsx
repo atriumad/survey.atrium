@@ -16,7 +16,10 @@ export function Sidebar({ role, clientName }: { role: Role; clientName: string |
   const pathname = usePathname();
   const items =
     role === "superadmin"
-      ? [{ href: "/dashboard/admin", label: "Clients" }]
+      ? [
+          { href: "/dashboard/admin", label: "Overview" },
+          { href: "/dashboard/admin/clients", label: "Clients" },
+        ]
       : role === "admin"
         ? [...NAV_ITEMS, { href: "/dashboard/config", label: "Settings" }]
         : NAV_ITEMS;
@@ -30,8 +33,8 @@ export function Sidebar({ role, clientName }: { role: Role; clientName: string |
       </div>
       <nav className="flex-1 flex flex-row lg:flex-col gap-1 p-3 overflow-x-auto">
         {items.map((item) => {
-          const active =
-            item.href === "/dashboard" ? pathname === item.href : pathname.startsWith(item.href);
+          const exactOnly = item.href === "/dashboard" || item.href === "/dashboard/admin";
+          const active = exactOnly ? pathname === item.href : pathname.startsWith(item.href);
           return (
             <Link
               key={item.href}
