@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { getTenantProfile } from "@/lib/get-profile";
 import { describeLocationScope } from "@/lib/location-label";
@@ -13,11 +14,11 @@ export default async function ReviewsPage({
   searchParams,
 }: {
   searchParams: Promise<{
-    location?: string;
-    classification?: string;
-    from?: string;
-    to?: string;
-    page?: string;
+    location?: string | string[];
+    classification?: string | string[];
+    from?: string | string[];
+    to?: string | string[];
+    page?: string | string[];
   }>;
 }) {
   const params = await searchParams;
@@ -32,15 +33,24 @@ export default async function ReviewsPage({
     .select("id, name")
     .eq("client_id", profile.clientId);
 
-  const page = Math.max(1, Number(params.page) || 1);
-  const effectiveLocation = profile.role === "manager" ? profile.locationId : params.location;
+  const pageNumber = Number(typeof params.page === "string" ? params.page : undefined);
+  const page = Number.isSafeInteger(pageNumber) ? Math.max(1, pageNumber) : 1;
+  const requestedLocation =
+    typeof params.location === "string" && z.uuid().safeParse(params.location).success
+      ? params.location
+      : undefined;
+  const classification =
+    params.classification === "good" || params.classification === "bad" ? params.classification : undefined;
+  const from = typeof params.from === "string" && !Number.isNaN(Date.parse(params.from)) ? params.from : undefined;
+  const to = typeof params.to === "string" && !Number.isNaN(Date.parse(params.to)) ? params.to : undefined;
+  const effectiveLocation = profile.role === "manager" ? profile.locationId : requestedLocation;
 
   const { reviews, totalPages } = await loadReviewsPage(supabase, {
     clientId: profile.clientId,
     locationId: effectiveLocation,
-    classification: params.classification,
-    from: params.from,
-    to: params.to,
+    classification,
+    from,
+    to,
     page,
     pageSize: PAGE_SIZE,
   });
@@ -48,9 +58,9 @@ export default async function ReviewsPage({
   function buildHref(targetPage: number): string {
     const search = new URLSearchParams();
     if (effectiveLocation && role === "admin") search.set("location", effectiveLocation);
-    if (params.classification) search.set("classification", params.classification);
-    if (params.from) search.set("from", params.from);
-    if (params.to) search.set("to", params.to);
+    if (classification) search.set("classification", classification);
+    if (from) search.set("from", from);
+    if (to) search.set("to", to);
     search.set("page", String(targetPage));
     return `?${search.toString()}`;
   }
@@ -63,7 +73,7 @@ export default async function ReviewsPage({
         actions={
           <div className="flex items-center gap-2">
             {profile.role === "admin" && <LocationFilter locations={locations ?? []} />}
-            <ExportButton filters={{ location: effectiveLocation ?? null, classification: params.classification ?? null, from: params.from ?? null, to: params.to ?? null }} />
+            <ExportButton filters={{ location: effectiveLocation ?? null, classification: classification ?? null, from: from ?? null, to: to ?? null }} />
           </div>
         }
       />

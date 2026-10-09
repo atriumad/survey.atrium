@@ -35,9 +35,10 @@ export default async function ClientReviewsPage({
   const locationId =
     typeof sp.location === "string" && z.uuid().safeParse(sp.location).success ? sp.location : undefined;
   const classification = sp.classification === "good" || sp.classification === "bad" ? sp.classification : undefined;
-  const from = typeof sp.from === "string" ? sp.from : undefined;
-  const to = typeof sp.to === "string" ? sp.to : undefined;
-  const page = Math.max(1, Number(typeof sp.page === "string" ? sp.page : undefined) || 1);
+  const from = typeof sp.from === "string" && !Number.isNaN(Date.parse(sp.from)) ? sp.from : undefined;
+  const to = typeof sp.to === "string" && !Number.isNaN(Date.parse(sp.to)) ? sp.to : undefined;
+  const pageNumber = Number(typeof sp.page === "string" ? sp.page : undefined);
+  const page = Number.isSafeInteger(pageNumber) ? Math.max(1, pageNumber) : 1;
   const { reviews, totalPages } = await loadReviewsPage(admin, {
     clientId,
     locationId,

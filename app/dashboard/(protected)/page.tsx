@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { getTenantProfile } from "@/lib/get-profile";
 import { describeLocationScope } from "@/lib/location-label";
@@ -9,7 +10,7 @@ import { PageHeader } from "./page-header";
 export default async function DashboardHomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ location?: string }>;
+  searchParams: Promise<{ location?: string | string[] }>;
 }) {
   const { location } = await searchParams;
   const profile = await getTenantProfile();
@@ -22,7 +23,9 @@ export default async function DashboardHomePage({
     .select("id, name")
     .eq("client_id", profile.clientId);
 
-  const effectiveLocation = profile.role === "manager" ? profile.locationId : location;
+  const requestedLocation =
+    typeof location === "string" && z.uuid().safeParse(location).success ? location : undefined;
+  const effectiveLocation = profile.role === "manager" ? profile.locationId : requestedLocation;
   const data = await loadOverviewData(supabase, {
     clientId: profile.clientId,
     locationId: effectiveLocation,

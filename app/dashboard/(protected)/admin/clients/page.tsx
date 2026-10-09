@@ -11,12 +11,13 @@ import { DeleteClientForm } from "./delete-client-form";
 
 export const dynamic = "force-dynamic";
 
-export default async function ClientsPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+export default async function ClientsPage({ searchParams }: { searchParams: Promise<{ q?: string | string[] }> }) {
   await requireSuperadmin();
-  const { q } = await searchParams;
+  const { q: rawQ } = await searchParams;
+  const q = typeof rawQ === "string" ? rawQ : "";
   const admin = createAdminClient();
   const all = await loadClientsIndex(admin);
-  const term = (q ?? "").trim().toLowerCase();
+  const term = q.trim().toLowerCase();
   const clients = term
     ? all.filter((c) => c.name.toLowerCase().includes(term) || c.slug.toLowerCase().includes(term))
     : all;
@@ -35,7 +36,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
       </Card>
 
       <form className="flex items-center gap-2" role="search">
-        <Input name="q" defaultValue={q ?? ""} placeholder="Search by name or slug" className="w-64" />
+        <Input name="q" defaultValue={q} placeholder="Search by name or slug" className="w-64" />
         <Button type="submit" variant="outline" size="sm">Search</Button>
       </form>
 
@@ -45,12 +46,12 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
         <div className="flex flex-col gap-3">
           {clients.map((c) => (
             <Card key={c.id} size="sm" className="p-4">
-              <CardContent className="p-0 flex items-start justify-between gap-4">
+              <CardContent className="p-0 flex flex-wrap items-start justify-between gap-4">
                 <Link href={`/dashboard/admin/clients/${c.id}`} className="flex-1 min-w-0">
                   <p className="font-medium text-ink">{c.name}</p>
                   <p className="text-sm text-body">{c.slug}</p>
                 </Link>
-                <div className="flex flex-col items-end gap-2">
+                <div className="flex basis-full flex-col items-end gap-2 sm:basis-auto">
                   <p className="text-sm text-body text-right">
                     {c.locationsCount} locations · {c.usersCount} users
                     <br />

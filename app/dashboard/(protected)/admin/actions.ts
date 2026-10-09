@@ -238,12 +238,12 @@ export async function deleteClientAction(_prev: ActionResult | null, formData: F
     const { error } = await admin.auth.admin.deleteUser(profile.id);
     if (error) {
       console.error("deleteClientAction: could not delete user", profile.id, error.message);
-      return fail("Could not delete one of the client's users. The client was not deleted.");
+      return fail("Some of the client's logins may already have been removed. The client was not deleted. Try again.");
     }
   }
 
   const { error: deleteError } = await admin.from("clients").delete().eq("id", clientId);
-  if (deleteError) return fail(describeDbError(deleteError, "Could not delete client."));
+  if (deleteError) return fail(describeDbError(deleteError, "Could not delete client. Its logins may already have been removed; try again."));
 
   revalidatePath(ADMIN_PATH, "layout");
   redirect(`${ADMIN_PATH}/clients`);
