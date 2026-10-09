@@ -1,11 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { getTenantProfile } from "@/lib/get-profile";
 import { describeLocationScope } from "@/lib/location-label";
+import { loadReviewsPage } from "@/lib/dashboard-data";
 import { ExportButton, ReviewsTable } from "./reviews-table";
 import { ReviewsPager } from "./pager";
 import { LocationFilter } from "../location-filter";
 import { PageHeader } from "../page-header";
-import type { ReviewWithLocation } from "@/lib/types";
 
 const PAGE_SIZE = 25;
 
@@ -33,34 +33,17 @@ export default async function ReviewsPage({
     .eq("client_id", profile.clientId);
 
   const page = Math.max(1, Number(params.page) || 1);
-  const from = (page - 1) * PAGE_SIZE;
-  const to = from + PAGE_SIZE - 1;
-
   const effectiveLocation = profile.role === "manager" ? profile.locationId : params.location;
 
-  let query = supabase
-    .from("reviews")
-    .select("*, location:locations(name)")
-    .eq("client_id", profile.clientId)
-    .order("created_at", { ascending: false })
-    .range(from, to);
-  if (effectiveLocation) query = query.eq("location_id", effectiveLocation);
-  if (params.classification) query = query.eq("classification", params.classification);
-  if (params.from) query = query.gte("created_at", params.from);
-  if (params.to) query = query.lte("created_at", params.to);
-
-  let countQuery = supabase
-    .from("reviews")
-    .select("*", { count: "exact", head: true })
-    .eq("client_id", profile.clientId);
-  if (effectiveLocation) countQuery = countQuery.eq("location_id", effectiveLocation);
-  if (params.classification) countQuery = countQuery.eq("classification", params.classification);
-  if (params.from) countQuery = countQuery.gte("created_at", params.from);
-  if (params.to) countQuery = countQuery.lte("created_at", params.to);
-
-  const [{ data: reviews }, { count }] = await Promise.all([query, countQuery]);
-  const reviewsList = (reviews ?? []) as ReviewWithLocation[];
-  const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
+  const { reviews, totalPages } = await loadReviewsPage(supabase, {
+    clientId: profile.clientId,
+    locationId: effectiveLocation,
+    classification: params.classification,
+    from: params.from,
+    to: params.to,
+    page,
+    pageSize: PAGE_SIZE,
+  });
 
   function buildHref(targetPage: number): string {
     const search = new URLSearchParams();
@@ -84,7 +67,7 @@ export default async function ReviewsPage({
           </div>
         }
       />
-      <ReviewsTable reviews={reviewsList} fillTo={PAGE_SIZE} />
+      <ReviewsTable reviews={reviews} fillTo={PAGE_SIZE} />
       <ReviewsPager page={page} totalPages={totalPages} buildHref={buildHref} />
     </div>
   );
