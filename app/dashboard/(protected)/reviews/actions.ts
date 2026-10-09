@@ -14,7 +14,7 @@ export interface ReviewExportFilters {
 
 export async function exportReviewsCsv(filters: ReviewExportFilters) {
   const profile = await getProfile();
-  if (!profile) return { csv: "", filename: "" };
+  if (!profile || profile.role === "superadmin") return { csv: "", filename: "" };
 
   const supabase = await createClient();
 

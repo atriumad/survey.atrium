@@ -1,6 +1,6 @@
 export type Classification = "good" | "bad";
 
-export type Role = "admin" | "manager";
+export type Role = "superadmin" | "admin" | "manager";
 
 export interface Review {
   id: string;

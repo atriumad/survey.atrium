@@ -12,20 +12,29 @@ const NAV_ITEMS = [
   { href: "/dashboard/reviews", label: "Reviews" },
 ];
 
-export function Sidebar({ role }: { role: Role }) {
+export function Sidebar({ role, clientName }: { role: Role; clientName: string | null }) {
   const pathname = usePathname();
   const items =
-    role === "admin" ? [...NAV_ITEMS, { href: "/dashboard/config", label: "Settings" }] : NAV_ITEMS;
+    role === "superadmin"
+      ? [
+          { href: "/dashboard/admin", label: "Overview" },
+          { href: "/dashboard/admin/clients", label: "Clients" },
+        ]
+      : role === "admin"
+        ? [...NAV_ITEMS, { href: "/dashboard/config", label: "Settings" }]
+        : NAV_ITEMS;
 
   return (
     <aside className="flex flex-row lg:flex-col w-full lg:w-56 lg:shrink-0 border-b lg:border-b-0 lg:border-r border-cool bg-off-white lg:sticky lg:top-0 lg:h-screen">
       <div className="hidden lg:block p-4">
         <p className="text-sm font-semibold text-ink">Atrium</p>
+        {clientName && <p className="text-sm text-ink mt-1 break-words">{clientName}</p>}
         <p className="text-xs text-body capitalize">{role}</p>
       </div>
       <nav className="flex-1 flex flex-row lg:flex-col gap-1 p-3 overflow-x-auto">
         {items.map((item) => {
-          const active = pathname === item.href;
+          const exactOnly = item.href === "/dashboard" || item.href === "/dashboard/admin";
+          const active = exactOnly ? pathname === item.href : pathname.startsWith(item.href);
           return (
             <Link
               key={item.href}

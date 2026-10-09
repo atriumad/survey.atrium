@@ -19,7 +19,9 @@ export default async function ThankYouPage({
   if (isGood && r) {
     const supabase = await createClient();
     const [locationResult, commentResult] = await Promise.all([
-      supabase.from("locations").select("google_review_url").eq("slug", locationSlug).single(),
+      supabase
+        .rpc("get_public_location", { p_slug: locationSlug })
+        .maybeSingle<{ google_review_url: string | null }>(),
       supabase.rpc("get_review_share_comment", { p_review_id: r }),
     ]);
     googleReviewUrl = locationResult.data?.google_review_url ?? null;

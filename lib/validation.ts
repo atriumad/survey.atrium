@@ -13,15 +13,17 @@ export const reviewSubmitSchema = z
     path: ["comment"],
   });
 
+const slugField = z
+  .string()
+  .trim()
+  .min(1)
+  .max(100)
+  .regex(/^[a-z0-9-]+$/i, "Slug can only contain letters, numbers, and dashes")
+  .transform((v) => v.toLowerCase());
+
 export const locationFormSchema = z.object({
   name: z.string().trim().min(1).max(100),
-  slug: z
-    .string()
-    .trim()
-    .min(1)
-    .max(100)
-    .regex(/^[a-z0-9-]+$/i, "Slug can only contain letters, numbers, and dashes")
-    .transform((v) => v.toLowerCase()),
+  slug: slugField,
   googleReviewUrl: z
     .string()
     .trim()
@@ -36,4 +38,45 @@ export const locationFormSchema = z.object({
 
 export const keywordFormSchema = z.object({
   keyword: z.string().trim().min(1).max(100),
+});
+
+export const clientFormSchema = z.object({
+  name: z.string().trim().min(1).max(100),
+  slug: slugField,
+});
+
+export const adminLocationFormSchema = locationFormSchema.extend({
+  clientId: z.uuid(),
+});
+
+export const userFormSchema = z
+  .object({
+    clientId: z.uuid(),
+    email: z.email("Invalid email address").transform((v) => v.toLowerCase()),
+    role: z.enum(["admin", "manager"]),
+    locationId: z
+      .union([z.uuid(), z.literal("")])
+      .optional()
+      .transform((v) => v || null),
+  })
+  .refine((d) => d.role !== "manager" || d.locationId !== null, {
+    message: "Managers need a location",
+    path: ["locationId"],
+  });
+
+export const userIdSchema = z.object({ userId: z.uuid() });
+
+export const clientUpdateSchema = clientFormSchema.extend({ clientId: z.uuid() });
+
+export const locationUpdateSchema = locationFormSchema
+  .pick({ name: true, googleReviewUrl: true })
+  .extend({ locationId: z.uuid() });
+
+export const clientDeleteSchema = z.object({
+  clientId: z.uuid(),
+  confirmSlug: z
+    .string()
+    .trim()
+    .max(100)
+    .transform((v) => v.toLowerCase()),
 });

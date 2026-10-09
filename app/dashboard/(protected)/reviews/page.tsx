@@ -1,10 +1,12 @@
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { getProfile } from "@/lib/get-profile";
+import { getTenantProfile } from "@/lib/get-profile";
+import { describeLocationScope } from "@/lib/location-label";
+import { loadReviewsPage } from "@/lib/dashboard-data";
 import { ExportButton, ReviewsTable } from "./reviews-table";
 import { ReviewsPager } from "./pager";
 import { LocationFilter } from "../location-filter";
 import { PageHeader } from "../page-header";
-import type { ReviewWithLocation } from "@/lib/types";
 
 const PAGE_SIZE = 25;
 
@@ -12,15 +14,15 @@ export default async function ReviewsPage({
   searchParams,
 }: {
   searchParams: Promise<{
-    location?: string;
-    classification?: string;
-    from?: string;
-    to?: string;
-    page?: string;
+    location?: string | string[];
+    classification?: string | string[];
+    from?: string | string[];
+    to?: string | string[];
+    page?: string | string[];
   }>;
 }) {
   const params = await searchParams;
-  const profile = await getProfile();
+  const profile = await getTenantProfile();
   if (!profile) return null;
   const role = profile.role;
 
@@ -31,42 +33,34 @@ export default async function ReviewsPage({
     .select("id, name")
     .eq("client_id", profile.clientId);
 
-  const page = Math.max(1, Number(params.page) || 1);
-  const from = (page - 1) * PAGE_SIZE;
-  const to = from + PAGE_SIZE - 1;
+  const pageNumber = Number(typeof params.page === "string" ? params.page : undefined);
+  const page = Number.isSafeInteger(pageNumber) ? Math.max(1, pageNumber) : 1;
+  const requestedLocation =
+    typeof params.location === "string" && z.uuid().safeParse(params.location).success
+      ? params.location
+      : undefined;
+  const classification =
+    params.classification === "good" || params.classification === "bad" ? params.classification : undefined;
+  const from = typeof params.from === "string" && !Number.isNaN(Date.parse(params.from)) ? params.from : undefined;
+  const to = typeof params.to === "string" && !Number.isNaN(Date.parse(params.to)) ? params.to : undefined;
+  const effectiveLocation = profile.role === "manager" ? profile.locationId : requestedLocation;
 
-  const effectiveLocation = profile.role === "manager" ? profile.locationId : params.location;
-
-  let query = supabase
-    .from("reviews")
-    .select("*, location:locations(name)")
-    .eq("client_id", profile.clientId)
-    .order("created_at", { ascending: false })
-    .range(from, to);
-  if (effectiveLocation) query = query.eq("location_id", effectiveLocation);
-  if (params.classification) query = query.eq("classification", params.classification);
-  if (params.from) query = query.gte("created_at", params.from);
-  if (params.to) query = query.lte("created_at", params.to);
-
-  let countQuery = supabase
-    .from("reviews")
-    .select("*", { count: "exact", head: true })
-    .eq("client_id", profile.clientId);
-  if (effectiveLocation) countQuery = countQuery.eq("location_id", effectiveLocation);
-  if (params.classification) countQuery = countQuery.eq("classification", params.classification);
-  if (params.from) countQuery = countQuery.gte("created_at", params.from);
-  if (params.to) countQuery = countQuery.lte("created_at", params.to);
-
-  const [{ data: reviews }, { count }] = await Promise.all([query, countQuery]);
-  const reviewsList = (reviews ?? []) as ReviewWithLocation[];
-  const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
+  const { reviews, totalPages } = await loadReviewsPage(supabase, {
+    clientId: profile.clientId,
+    locationId: effectiveLocation,
+    classification,
+    from,
+    to,
+    page,
+    pageSize: PAGE_SIZE,
+  });
 
   function buildHref(targetPage: number): string {
     const search = new URLSearchParams();
     if (effectiveLocation && role === "admin") search.set("location", effectiveLocation);
-    if (params.classification) search.set("classification", params.classification);
-    if (params.from) search.set("from", params.from);
-    if (params.to) search.set("to", params.to);
+    if (classification) search.set("classification", classification);
+    if (from) search.set("from", from);
+    if (to) search.set("to", to);
     search.set("page", String(targetPage));
     return `?${search.toString()}`;
   }
@@ -75,14 +69,15 @@ export default async function ReviewsPage({
     <div className="flex flex-col gap-4">
       <PageHeader
         title="Reviews"
+        description={describeLocationScope(profile.role, effectiveLocation, locations ?? [])}
         actions={
           <div className="flex items-center gap-2">
             {profile.role === "admin" && <LocationFilter locations={locations ?? []} />}
-            <ExportButton filters={{ location: effectiveLocation ?? null, classification: params.classification ?? null, from: params.from ?? null, to: params.to ?? null }} />
+            <ExportButton filters={{ location: effectiveLocation ?? null, classification: classification ?? null, from: from ?? null, to: to ?? null }} />
           </div>
         }
       />
-      <ReviewsTable reviews={reviewsList} fillTo={PAGE_SIZE} />
+      <ReviewsTable reviews={reviews} fillTo={PAGE_SIZE} />
       <ReviewsPager page={page} totalPages={totalPages} buildHref={buildHref} />
     </div>
   );

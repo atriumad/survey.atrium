@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +11,8 @@ import { GoogleLinkGuide } from "./google-link-guide";
 import type { Location } from "@/lib/types";
 
 export function LocationsSection({ locations, baseUrl }: { locations: Location[]; baseUrl: string }) {
+  const [state, formAction, pending] = useActionState(createLocation, null);
+
   return (
     <div className="flex flex-col gap-4">
       <h2 className="text-xs uppercase tracking-wide font-semibold text-body">Locations</h2>
@@ -19,7 +21,7 @@ export function LocationsSection({ locations, baseUrl }: { locations: Location[]
           <CardTitle>Add location</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={createLocation} className="flex gap-3 flex-wrap items-end">
+          <form action={formAction} className="flex gap-3 flex-wrap items-end">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="location-name">Name</Label>
               <Input id="location-name" name="name" placeholder="Downtown Branch" required className="w-40" />
@@ -38,7 +40,10 @@ export function LocationsSection({ locations, baseUrl }: { locations: Location[]
               />
               <GoogleLinkGuide />
             </div>
-            <Button type="submit">Add</Button>
+            <Button type="submit" disabled={pending}>Add</Button>
+            {state && !state.ok && (
+              <p role="alert" className="w-full text-sm text-red-600">{state.error}</p>
+            )}
           </form>
         </CardContent>
       </Card>

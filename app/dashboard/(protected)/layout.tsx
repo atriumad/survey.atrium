@@ -26,9 +26,19 @@ export default async function DashboardLayout({ children }: { children: React.Re
     );
   }
 
+  let clientName: string | null = null;
+  if (profile.clientId) {
+    const { data: client } = await supabase
+      .from("clients")
+      .select("name")
+      .eq("id", profile.clientId)
+      .maybeSingle();
+    clientName = client?.name ?? null;
+  }
+
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-off-white">
-      <Sidebar role={profile.role} />
+      <Sidebar role={profile.role} clientName={clientName} />
       <main className="flex-1 p-6 lg:p-8">{children}</main>
     </div>
   );

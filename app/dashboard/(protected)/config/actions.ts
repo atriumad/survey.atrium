@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/get-profile";
 import { locationFormSchema, keywordFormSchema } from "@/lib/validation";
+import { describeDbError } from "@/lib/db-errors";
+import type { ActionResult } from "@/lib/action-result";
 
 async function requireAdmin() {
   const profile = await getProfile();
@@ -11,7 +13,7 @@ async function requireAdmin() {
   return profile;
 }
 
-export async function createLocation(formData: FormData) {
+export async function createLocation(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const profile = await requireAdmin();
   const parsed = locationFormSchema.safeParse({
     name: formData.get("name"),
@@ -19,7 +21,7 @@ export async function createLocation(formData: FormData) {
     googleReviewUrl: formData.get("googleReviewUrl"),
   });
   if (!parsed.success) {
-    throw new Error(parsed.error.issues[0]?.message ?? "Invalid location");
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid location." };
   }
 
   const { name, slug, googleReviewUrl } = parsed.data;
@@ -30,8 +32,9 @@ export async function createLocation(formData: FormData) {
     slug,
     google_review_url: googleReviewUrl,
   });
-  if (error) throw error;
+  if (error) return { ok: false, error: describeDbError(error, "Could not create location.") };
   revalidatePath("/dashboard/config");
+  return { ok: true, data: null };
 }
 
 export async function deleteLocation(locationId: string) {
