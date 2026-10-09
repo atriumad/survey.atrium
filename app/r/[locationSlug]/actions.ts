@@ -2,12 +2,14 @@
 
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { reviewSubmitSchema } from "@/lib/validation";
 import {
   buildRateLimitKey,
   consumeRateLimit,
   getRequestIp,
+  SHARE_CLICK_POLICY,
   SUBMIT_REVIEW_POLICY,
 } from "@/lib/rate-limit";
 
@@ -70,4 +72,21 @@ export async function submitReview(formData: FormData) {
   }
 
   redirect(`/r/${locationSlug}/t?c=${row.classification}&r=${row.review_id}`);
+}
+// Called when the visitor clicks "Leave a Google review". Best effort: it must
+// never block the link or surface an error to the visitor.
+export async function markSharedToGoogle(reviewId: string): Promise<void> {
+  if (!z.uuid().safeParse(reviewId).success) return;
+
+  const headersList = await headers();
+  const supabase = await createClient();
+  const allowed = await consumeRateLimit(
+    supabase,
+    buildRateLimitKey(getRequestIp(headersList), "share-click"),
+    SHARE_CLICK_POLICY
+  );
+  if (!allowed) return;
+
+  const { error } = await supabase.rpc("mark_review_shared", { p_review_id: reviewId });
+  if (error) console.error("mark_review_shared failed", error);
 }

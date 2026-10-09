@@ -5,10 +5,15 @@ export type RateLimitPolicy = {
   windowSeconds: number;
 };
 
-export type RateLimitAction = "submit-review" | "login";
+export type RateLimitAction = "submit-review" | "login" | "share-click";
 
 export const SUBMIT_REVIEW_POLICY: RateLimitPolicy = {
   maxAttempts: 2,
+  windowSeconds: 60,
+};
+
+export const SHARE_CLICK_POLICY: RateLimitPolicy = {
+  maxAttempts: 5,
   windowSeconds: 60,
 };
 
